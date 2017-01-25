@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import DataType, DataProvider, Location, Series, Value, Forecast, SatelliteData, Colormap
 from django.utils.html import format_html, mark_safe
-from .satelliteData import TRMMSatelliteRainfall, TRMMSatelliteRainfallRT
+from .satelliteData import TRMMSatelliteRainfallRT
 from django.conf import settings
 
 import warnings
@@ -174,15 +174,17 @@ class ForecastAdmin(AdminAutoRecord):
                     pass
         super(ForecastAdmin, self).save_model(request, obj, form, change)
     
-class ColormapAdmin(AdminAutoRecord):        
+class ColormapAdmin(AdminAutoRecord):   
+    readonly_fields = ('iconImageSmall',)
+   
     fieldsets = [
         ('Base information', {'fields': (('name',),
-                                         ('file',)
+                                         ('iconImageSmall', 'file',)
                                          ),
                               'description': 'Base information characterizing the colormap.'}),
     ]
 
-    list_display = ('name',)
+    list_display = ('iconImageSmall', 'name',)
     search_fields = ('name', 'introducedBy')
     
 class SatelliteDataAdmin(AdminAutoRecord):

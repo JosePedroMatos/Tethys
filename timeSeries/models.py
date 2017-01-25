@@ -51,6 +51,8 @@ class DataType(models.Model):
     
     def iconImageSmall(self):
         return format_html('<img height="30" width="30" src="/{}"/>', mark_safe(self.icon)) 
+    iconImage.short_description = 'Icon'
+    iconImageSmall.short_description = 'Icon'
     
     def __str__(self):
         return self.name + ' (' + self.units + ')'
@@ -74,7 +76,8 @@ class DataProvider(models.Model):
 
     def iconImage(self):
         return format_html('<img height="30" src="/{}"/>', mark_safe(self.icon)) 
-    
+    iconImage.short_description = 'Icon'
+
     def __str__(self):
         return self.abbreviation
 
@@ -255,17 +258,26 @@ class Colormap(models.Model):
     
     def __str__(self):
         return self.name
+    
+    def iconImageSmall(self):
+        return format_html('<img height="15" width="45" src="/{}"/>', mark_safe(self.file))
+    iconImageSmall.short_description = 'Image'
+
 
 class SatelliteData(models.Model):
-    TRMM3B42v7_3h = ('TRMMSatelliteRainfall')  # name of the satellite data class
+    #===========================================================================
+    # TRMM3B42v7_3h = ('TRMMSatelliteRainfall')  # name of the satellite data class
+    #===========================================================================
     TRMM3B42v7_3h_RT =  ('TRMMSatelliteRainfallRT')  # name of the satellite data class
     PRODUCT_CHOICES = (
         (TRMM3B42v7_3h_RT, 'TRMM 3B42 3h realtime'),
-        (TRMM3B42v7_3h, 'TRMM 3B42 3h'),
+        #=======================================================================
+        # (TRMM3B42v7_3h, 'TRMM 3B42 3h'),
+        #=======================================================================
     )
 
     name = models.CharField(max_length=255, null=False, blank=False, unique=True)
-    satellite = models.CharField('Satellite product', max_length=255, default=TRMM3B42v7_3h, choices=PRODUCT_CHOICES, null=False, blank=False, help_text='Choice among supported satellite products.')
+    satellite = models.CharField('Satellite product', max_length=255, default=TRMM3B42v7_3h_RT, choices=PRODUCT_CHOICES, null=False, blank=False, help_text='Choice among supported satellite products.')
     observations = models.TextField(null=True, blank=True)
     startDate = models.DateTimeField('Start date', default=datetime.datetime(2010, 10, 1, 0, 0, 0), null=False, help_text='Start date of data collection.')
     lastRecord = models.DateTimeField('Last record', default=None, null=True, help_text='Date of the last entry on record.')
