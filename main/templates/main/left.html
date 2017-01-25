@@ -1,0 +1,142 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<html>
+    <head>
+    	<title>Tethys: Menu</title>
+        <link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+        
+        {{ LOCAL_JAVASCIPT|safe }}
+        
+        <script src="{% static 'main/scripts/main.js' %}"></script>
+        
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+
+        <script>
+            $(document).ready(function() {
+            	// convert all buttons to jQuery UI buttons
+                $("input:button").button();
+            	
+              	//equalize all buttons' widths
+                $("input:button").css('width',"")
+                var widths = [];
+                $(".menuButton").each(function() {
+                	widths.push($(this).width());
+                });
+                var maxWidth = Math.max.apply(null, widths);
+                $(".menuButton").each(function() {
+                	widths.push($(this).width(maxWidth));
+                });
+
+                // equalize all div's widths
+                var widths = [];
+                $(".menu").each(function() {
+                	widths.push($(this).width());
+                });
+                var maxWidth = Math.max.apply(null, widths);
+                $(".menu").each(function() {
+                	widths.push($(this).width(maxWidth));
+                });
+				
+                // consider headers
+                var widths = [];
+                $("h3").each(function() {
+                	widths.push($(this).width());
+                });
+                var maxWidth = Math.max.apply(null, widths);
+                
+                // set minimum width
+                var container = parent.$("#divLeftFrame").children('#leftFrame').contents().find('body');
+                var div = $("#menuDivEx");
+                var extra = container.outerWidth(true) - container.width() + div.outerWidth(true) - div.width() + 4;
+                parent.$("#divLeftFrame").css({"min-width": (Math.max(maxWidth, $(".menuButton").outerWidth(true)) + extra) + "px"});
+            	
+                // prompt a reset of middle divs' widths
+                parent.fSetWidth()
+            });
+        </script>
+
+        <style>
+            h3{
+                text-align: center;
+            }
+
+            .menu {
+                float: left;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>{% trans 'ContentsTitle' %}</h2>
+
+        <div class="menu" id="menuDivEx">
+            <h3>{% trans 'IntroductionTitle' %}</h3>
+            <table border="0" align="center">
+                <tbody>
+                 	<tr>
+                        <td><input type="button" class="menuButton" value="{% trans 'WalkthroughButton' %}" onclick="fMainJumpTo('walkthrough');" style="height: auto; width: 120px">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="button" class="menuButton" value="{% trans 'AboutButton' %}" onclick="fMainJumpTo('about');" style="height: auto; width: 120px">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="button" class="menuButton" value="{% trans 'FAQButton' %}" onclick="fMainJumpTo('faq');" style="height: auto; width: 120px" title="Frequently Asked Questions">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="button" class="menuButton" value="{% trans 'LinksButton' %}" onclick="fMainJumpTo('links');" style="height: auto; width: 120px">
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>     
+        </div>
+
+		<div class="menu">
+            <h3>{% trans 'TimeSeriesTitle' %}</h3>
+            <table border="0" align="center">  
+                <tbody>
+                    <tr>
+                        <td><input type="button" class="menuButton" value="{% trans 'TimeSeriesButton' %}" onclick="parent.fLoadMidDiv('left.html', '/map/mainMap/');">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+		<!-- 
+		<div class="menu">
+            <h3>{% trans 'DocumentsTitle' %}</h3>
+            <table border="0" align="center">  
+                <tbody>
+                    <tr>
+                        <td><input type="button" class="menuButton" value="{% trans 'WaterResourcesButton' %}" onclick="">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="button" class="menuButton" value="{% trans 'UploadDataButton' %}" onclick="parent.mainF.location = '';">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+		 -->
+
+        <div class="menu">
+            <h3>{% trans 'ManagementTitle' %}</h3>
+            <table border="0" align="center">  
+                <tbody>
+                    <tr>
+                        <td><input type="button" class="menuButton" value="{% trans 'ManageAccountButton' %}" onclick="fLoadInNewTab('/admin/');">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </body>
+</html>

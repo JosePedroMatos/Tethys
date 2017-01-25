@@ -1,0 +1,7 @@
+Built by the Tethys African Water Resources database, by the African Dams Project (http://zambezi.epfl.ch)
+Hindcast downloaded in {% date %} by {% user %}.
+
+Location: {% series %}
+Data type: {% type %}
+
+{% data %}

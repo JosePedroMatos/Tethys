@@ -1,0 +1,98 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<html>
+    <head>
+		<title>Tethys: login</title>
+		<link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+		
+		<script src="/static/main/scripts/jquery.min.js"></script>
+		<script src="/static/main/scripts/jquery-ui.min.js"></script>
+        
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+		
+		<style>
+			td {
+            	text-align: right;
+            }
+            #wrapperDiv {
+				width: 500px;
+				height: 200px;				
+				position: absolute;
+				top:0;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				
+				margin: auto;
+            }
+            #rightDiv {
+				float: right;
+				width: 200px;
+				height: 200px;
+				background-size: 100%;
+            }
+            #leftDiv{
+            	float: left;
+            	width: 300px;
+            	height: 200px;
+ 			}
+ 			input {
+ 				width: 150px;
+ 			}
+		</style>
+		
+		<script>
+			var hideRecover=true;
+		
+			$(document).ready(function() {
+				$("input:submit").button();
+				$("input:submit").width(135);
+				
+				if (hideRecover) {
+					$('#recover').hide();
+				}
+				
+				$('#rightDiv').css('background', 'url({% static 'main/images/logos/logo.png' %}) no-repeat center center');
+			});
+		</script>
+	</head>
+    <body>
+    	<div id="wrapperDiv">
+            <div id="leftDiv"">
+            	<h2>{% trans 'Login' %}</h2>
+		        {% if form.errors %}
+					<p>Your username and password didn't match. Please try again.</p>
+					<script>hideRecover=false;</script>
+				{% endif %}
+				<form method="post" action="{% url 'login' %}">
+					{% csrf_token %}
+					<table>
+						<tr>
+						    <td>{{ form.username.label_tag }}&nbsp&nbsp{{ form.username }}</td>
+						</tr>
+						<tr>
+						    <td>{{ form.password.label_tag }}&nbsp&nbsp{{ form.password }}</td>
+						</tr>
+						<tr>
+						    <td><br></td>
+						</tr>
+						<tr>
+						    <td style="text-align: center;"><input type="submit" class="menuButton" value="login" />
+								<input type="hidden" name="next" value="{{ next }}" /></td>
+						</tr>
+						<tr>
+						    <td style="text-align: center;"><input type="submit" id='recover' class="menuButton" value="recover" /></td>
+						</tr>
+					</table>
+					<br>
+					
+				</form>
+            </div>
+            <div id="rightDiv">
+            </div>
+        </div>
+    </body>
+</html>
+

@@ -1,0 +1,39 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+    <head>
+		<title>{% trans 'Page not found' %}</title>
+		
+		{{ LOCAL_JAVASCIPT|safe }}
+		
+		<script src="{% static 'main/scripts/main.js' %}"></script>
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+		
+        <style>
+            body {
+                overflow: hidden;
+                margin: 0px;
+                padding: 0px;
+            }
+        </style>
+		
+		<script>
+        	$(document).ready(function() {
+        		$('#headerLeftDiv').css('background', 'url({% static 'main/images/logos/logo.png' %}) no-repeat center center');
+	        	$('#headerLeftDiv').css('background-size', 'contain');
+        	});
+        </script>
+    </head>
+    <body>
+    	<div id="#headerWrapperDiv">
+            <div id="headerLeftDiv" onclick="fLoadHome();">
+            </div>
+            <div id="headerCenterDiv">
+                <h1>{% trans 'Page not found' %}</h1>
+                <p>{% trans "We're sorry, but the requested page could not be found." %}</p>
+            </div>
+        </div>
+	</body>
+</html>

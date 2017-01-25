@@ -1,0 +1,262 @@
+html {
+    height: 100%;
+}
+
+body {
+    font-family: Verdana, Arial, sans-serif;
+    font-size: small;
+    padding: 10px;
+    color: #ddd;
+    background-color: #000;
+}
+
+body#indexBody {
+    height: 100%;
+    width: 100%;
+    border: 0px;
+    margin: 0px;
+    padding: 0px;
+    max-width: 100%;
+}
+
+p {
+	max-width: 800px;
+}
+
+h1 {
+    text-align: left;
+    letter-spacing: 6px;
+    font-size: x-large;
+    color: #be7429;
+    font-weight: normal;
+}
+
+h2 {
+    text-align: left;
+    letter-spacing: 2px;
+    font-size: medium;
+    color: #be7429;
+    font-weight: normal;
+}
+
+h3 {
+    text-align: left;
+    color: #be7429;
+    font-weight: normal;
+    font-size: small;
+    margin: 6px;
+}
+
+td {
+	font-size: small;
+}
+
+a:link {
+    color: #be7429;
+    font-weight: normal;
+    font-size: small;
+    text-decoration: none;
+}
+
+a:link:hover {
+    color: #be7429;
+    font-weight: normal;
+    text-decoration: underline;
+}
+
+a:visited  {
+    color: #be7429;
+    font-weight: normal;
+    text-decoration: underline; 
+}
+
+a:visited:hover {
+    color: #8c5e19;
+    font-weight: normal;
+    text-decoration: underline;
+}
+
+.ui-button {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-family: Verdana, Arial, sans-serif;
+    font-size: small;
+}
+
+.ui-selectmenu-button {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-family: Verdana, Arial, sans-serif;
+    font-size: small;
+    vertical-align: middle;
+}
+
+.ui-selectmenu-text, .ui-selectmenu-button, span.ui-selectmenu-tex {
+	padding: 0px;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: 0px;
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+}
+
+#divHeaderFrame {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	height: 155px;
+    width: 100%;
+    z-index: 2;
+}
+
+#divMiddleWrap {
+	position: fixed;
+	top: 155px;
+	bottom: 55px;
+	width: 100%;
+}
+
+#divLeftFrame {
+	position: absolute;
+	left: 0px;
+	width: 0%;
+	height: 100%;
+	max-width: 50%;
+}
+
+#divMainFrame {
+	position: absolute;
+	right: 0px;
+	height: 100%;
+	width: 79%;
+}
+
+#divFooterFrame {
+	position: fixed;
+    bottom: 0px;
+    height: 55px;
+    width: 100%;
+    z-index: 2;
+}
+
+
+.helper {
+	/*max-width: 800px;*/
+	cursor: pointer;
+}
+
+.container {
+	margin: 20px;
+	margin-top: 60px;
+	margin-bottom: 60px;
+}
+
+section.mainSection {
+    position: relative;
+    left: 200px;
+    margin: 10px;
+    min-height: 125px;
+}
+
+.ui-resizable-e { 
+	cursor: ew-resize; 
+                
+	height: 40px;
+	width: 10px; 
+	right: -6px;
+	top: 50%;
+	transform: translateY(-50%);
+  				
+	border: 2px solid;
+	border-style: solid;
+ 	border-radius: 16px;
+	border-color: rgba(190, 116, 41, 0.8);
+	background-color: rgba(0, 0, 0, 0.8);
+	background-position: 50%; 50%;
+	background-size: 20px 35px;
+	background-repeat: no-repeat;
+}
+        
+#hideFrameHeader{ 
+	cursor: n-resize; 
+
+	height: 10px;
+	width: 40px;
+	position: absolute;
+	right: 50%;
+	bottom: 0px;
+	z-index: 1;
+	transform: translateY(50%);
+  				
+	border: 2px solid;
+	border-style: solid;
+	border-radius: 16px;
+	border-color: rgba(190, 116, 41, 0.8);
+                
+	background-color: rgba(0, 0, 0, 0.8);
+	background-position: 50%; 50%;
+	background-size: 35px 20px;
+	background-repeat: no-repeat;
+}
+            
+#hideFrameFooter { 
+	cursor: s-resize; 
+
+	height: 10px;
+	width: 40px;
+	position: absolute;
+	right: 50%;
+	top: 0px;
+	z-index: 1;
+	transform: translateY(-50%);
+  				
+	border: 2px solid;
+	border-style: solid;
+	border-radius: 16px;
+	border-color: rgba(190, 116, 41, 0.8);
+                
+	background-color: rgba(0, 0, 0, 0.8);
+	background-position: 50%; 50%;
+	background-size: 35px 20px;
+	background-repeat: no-repeat;
+}
+
+#headerWrapperDiv {
+	padding: 10px;
+}
+    
+#headerLeftDiv {
+	padding: 0px;
+	float: left;
+	width: 120px;
+	height: 120px;
+	background-size: contain;
+	cursor: pointer;
+}
+            
+#headerCenterDiv {
+	margin-left: 155px;
+	margin-right: 100px;
+}
+            
+#headerRightDiv {
+	float: right;
+	width: 200px;
+	height: 150px;
+	padding-top: 25px;
+}
+
+#hidden {
+	width: 0px;
+	heigth: 0px;
+	position: fixed;
+}
+
+.mfp-content {
+	height: 90%;
+	width: 90%;
+}

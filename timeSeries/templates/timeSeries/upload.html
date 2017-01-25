@@ -1,0 +1,159 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Tethys: Water Resources Database Series Upload</title>
+		<link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+		
+		{{ LOCAL_JAVASCIPT|safe }}
+        
+        <script src="{% static 'timeSeries/scripts/ajax.js' %}"></script>
+		<script src="{% static 'timeSeries/scripts/forge.min.js' %}"></script>
+		
+        <script src="{% static 'timeSeries/scripts/xlsx.core.min.js' %}"></script>
+        
+        <script src="{% static 'timeSeries/scripts/d3.min.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/d3.layout.min.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/rickshaw.min.js' %}"></script>
+        
+        <script src="{% static 'timeSeries/scripts/plotChart.js' %}"></script>
+        
+		<!--<link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />-->
+		
+		<link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/rickshaw.min.css' %}" />
+		
+		<link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/chart.css' %}" />
+		
+		<style>
+			body {
+				overflow: hidden;
+			}
+		</style>
+		
+	</head>
+	<body>
+		<script>
+			/*var seriesData;
+			var seriesInfo = {name: 'Name',
+							location: 'Location',
+							type: 'Type',
+							units: 'Units',
+							timeStepUnits: 'Time step',
+							provider: 'Provider',
+							encryptionKey: 'encryptionKey',
+							};
+			
+			function fBuildTable(dataObj) {
+				var table = '<table id="seriesInfoTable"><tr>';
+				for (k0 in seriesInfo) {
+					table += '<th>' + seriesInfo[k0] + '</th>';
+				}
+				table += '</tr><tr>';
+				for (k0 in seriesInfo) {
+					table += '<td>' + dataObj[k0] + '</td>';
+				}
+				table += '</tr></table>';
+				$('#seriesInfo').append(table);
+			}
+		
+			// get information from the chosen series
+			function getSeriesInfo() {
+				$('#seriesInfo').empty();				
+				if ($('#id_Series').val() != '') {			
+					$.ajax({
+				        url : "upload/seriesData", // the endpoint
+				        type : "POST", // http method
+				        data : {series: $('#id_Series').val(),}, // data sent with the post request
+		
+				        // handle a successful response
+				        success : function(json) {
+							seriesData = json;
+				            fBuildTable(seriesData);
+				        },
+				        // handle a non-successful response
+				        error : function(xhr,errmsg,err) {
+				            $('#seriesInfo').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+				                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+				            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+				        }
+				    });
+				}				
+			}*/
+		</script>
+		
+		<input id="series" type="file" name="file">
+		<div id="chart"></div> 
+		<div id="slider"></div>
+		<form action="upload/" method="post" id='uploadPost'>
+		    {% csrf_token %}
+		    {{ form }}
+		    <input type="submit" value="Submit" id='uploadPostText'/>
+		</form>
+		
+		<script>
+			var dates;
+			var records;
+		  	function handleFile(e) {
+				dates = [];
+				records = [];
+									
+		  		var files = e.target.files;
+		  		var i,f;
+		  		for (i = 0, f = files[i]; i != files.length; ++i) {
+		    		var reader = new FileReader();
+		    		var name = f.name;
+		    		reader.onload = function(e) {
+		      			var data = e.target.result;
+		
+		      			var workbook = XLSX.read(data, {type: 'binary'});
+		      			var sheetNameList = workbook.SheetNames;
+				      	var worksheet = workbook.Sheets[sheetNameList[0]];
+						
+						var tmpDate;
+						var dataForDisplay = [];
+				  	   	for (z in worksheet) {
+					    	if(z[0] != '!') {
+								if (z.toString().indexOf('A') === 0) {
+									tmpDate = Date.parse(worksheet[z].v);
+									dates.push(tmpDate);
+								}
+								if (z.toString().indexOf('B') === 0) {
+									var tmpRecord = parseFloat(worksheet[z].v);
+									dataForDisplay.push(new Point(tmpDate, tmpRecord));
+									records.push(tmpRecord);
+									tmpDate = null;
+								}
+							}
+					  	}
+					  	
+					  	// display plot
+					  	
+					  	for (i0=0; i0<dates.length; i0++) {
+							dataForDisplay.push(new Point(dates[i0], records[i0]));
+						}		
+					  	
+					  	$('#uploadPost').show();
+					  	display(dataForDisplay);
+					  	
+		    		};
+		    		reader.readAsBinaryString(f);
+		  		}
+			}
+			$('#series').get()[0].addEventListener('change', handleFile, false);
+			
+			$(document).ready(function() {
+				$('#uploadPost').hide();
+				
+				if ('{{ metaEncrypted }}' === 'True') {
+					console.log('meta');
+				} else {
+					console.log('not meta');
+				}
+			})
+		</script>
+	</body>
+</html>

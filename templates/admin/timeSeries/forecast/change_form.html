@@ -1,0 +1,222 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls admin_static admin_modify %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script>(function($){jQuery = $.noConflict(true);})(django.jQuery);</script>
+{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/magnific-popup.css' %}" />
+    <style>
+        .mfp-content {
+            height:90%;
+            width: 90%;
+ 		}
+ 		.custom-row {
+ 			text-align: left;
+ 		}
+ 		#uploadData {
+ 			margin: 2px 0;
+ 		}
+ 		
+ 		#train {
+ 			background: #ba2121;
+ 		}
+ 		
+ 		.loader {
+			height: 80px;
+			background-image: url("{% static 'main/images/loader.gif' %}");
+			background-repeat: no-repeat;
+			background-position: center center;
+		}
+    </style>
+{% endblock %}
+
+
+{% block admin_change_form_document_ready %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% static 'admin/scripts/jquery.magnific-popup.js' %}"></script>
+    
+    <script type="text/javascript">
+	    
+    	var training = {};
+    	wrapperClick = function(){
+	        var obj = mpld3.get_element(this.props.id);
+	        var state = this.props.state;
+	        var styles = this.props.styles;
+	        var marker = this.props.marker;
+	        
+	        training[marker] = state;
+	        
+	        function update(object, styles, state) {
+	            if (state) {
+	                d3.select(object).style('fill', styles[state].fill);
+	            } else {
+	                d3.select(object).style('fill', styles[state].fill);
+	            }
+	        }
+	        
+	        var info = this.props.info;
+	        obj.elements().on("mousedown",
+	            function(d, i){
+	                state = !state;
+	                training[marker] = state;
+	                django.jQuery('#id_trainingDates').val(JSON.stringify(training));
+	                //django.jQuery('#id_trainingDates').val("");
+	                update(this, styles, state);
+	            }
+	        );
+	    };
+    	
+    	
+	    function mpld3_load_lib(url, callback){
+			var s = document.createElement('script');
+			s.src = url;
+			s.async = true;
+			s.onreadystatechange = s.onload = callback;
+			s.onerror = function(){console.warn("failed to load library " + url);};
+			document.getElementsByTagName("head")[0].appendChild(s);
+		}
+		
+		function drawFigure(data) {
+			if (typeof (mpld3) !== "undefined" && mpld3._mpld3IsLoaded) {
+				// already loaded: just create the figure
+				!function(mpld3) {
+					
+					mpld3.register_plugin("clickinfo", ClickInfo);
+				    ClickInfo.prototype = Object.create(mpld3.Plugin.prototype);
+				    ClickInfo.prototype.constructor = ClickInfo;
+				    ClickInfo.prototype.requiredProps = ["id", "state", "styles", "marker"];
+				    function ClickInfo(fig, props){
+				        mpld3.Plugin.call(this, fig, props);
+				    };
+				    
+				    ClickInfo.prototype.draw = wrapperClick;
+					
+					mpld3.draw_figure("chart", data);
+					django.jQuery('#id_trainingDates').val(JSON.stringify(training));
+					
+				}(mpld3);
+			} else if (typeof define === "function" && define.amd) {
+				// require.js is available: use it to load d3/mpld3
+				require.config({
+					paths : {
+						d3 : "https://mpld3.github.io/js/d3.v3.min"
+					}
+				});
+				require([ "d3" ], function(d3) {
+					window.d3 = d3;
+					mpld3_load_lib(
+							"https://mpld3.github.io/js/mpld3.v0.2.js",
+							function() {
+								
+								mpld3.register_plugin("clickinfo", ClickInfo);
+							    ClickInfo.prototype = Object.create(mpld3.Plugin.prototype);
+							    ClickInfo.prototype.constructor = ClickInfo;
+							    ClickInfo.prototype.requiredProps = ["id", "state", "styles", "marker"];
+							    function ClickInfo(fig, props){
+							        mpld3.Plugin.call(this, fig, props);
+							    };
+							    
+							    ClickInfo.prototype.draw = wrapperClick;
+								
+								mpld3.draw_figure("chart", data);
+								django.jQuery('#id_trainingDates').val(JSON.stringify(training));
+							});
+				});
+			} else {
+				// require.js not available: dynamically load d3 & mpld3
+				mpld3_load_lib(
+						"https://mpld3.github.io/js/d3.v3.min.js",
+						function() {
+							mpld3_load_lib(
+									"https://mpld3.github.io/js/mpld3.v0.2.js",
+									function() {
+										
+										mpld3.register_plugin("clickinfo", ClickInfo);
+									    ClickInfo.prototype = Object.create(mpld3.Plugin.prototype);
+									    ClickInfo.prototype.constructor = ClickInfo;
+									    ClickInfo.prototype.requiredProps = ["id", "state", "styles", "marker"];
+									    function ClickInfo(fig, props){
+									        mpld3.Plugin.call(this, fig, props);
+									    };
+									    
+									    ClickInfo.prototype.draw = wrapperClick;
+										
+										mpld3.draw_figure("chart", data);
+										django.jQuery('#id_trainingDates').val(JSON.stringify(training));
+									})
+						});
+			}
+		}
+    
+        (function($) {
+        	function getTrainingPeriods() {
+    			$.ajax({
+    				url : '/timeSeries/trainForecast/' +  $('#id_name').val() + '/forecast/getTrainingPeriods/', // the endpoint
+    				type : "POST", // http method
+    				data : {
+    					csrfmiddlewaretoken : '{{ csrf_token }}', // data sent with the post request
+    					width: django.jQuery('#chartLoader').width(),
+    				}, // data sent with the post request
+
+    				// handle a successful response
+    				success : function(json) {
+    					$('#chartLoader').hide();
+    					$('#chart').show();
+    					drawFigure(json.plot);
+    				},
+
+    				// handle a non-successful response
+    				error : function(xhr, errmsg, err) {
+    					console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+    				}
+    			});
+    		}
+        	
+            $(document).ready(function() {
+            	// train button
+            	$('.submit-row').before('<fieldset class="module aligned ">' + 
+            			'<h2>Prepare forecast</h2>' + 
+            			'<div class="description">Prepare forecast by running the appropriate models. May take some time.</div>' +
+            			'<div class="submit-row custom-row">' +
+                		'<input id="train" value="Train" type="submit">' +
+                		'</div>' +
+            			'</fieldset>');
+                
+            	$('#train').attr('href', '/timeSeries/trainForecast/' +  $('#id_name').val() + '/train/');
+            	if (!$('#id_name').val()) {
+					$('#train').prop('disabled', true);
+				} else {
+					$('#train').prop('disabled', false);
+                };
+            	
+                $('#train').magnificPopup({
+                    fixedBgPos: true,
+                    type: 'iframe',
+                    });
+                
+                // train periods
+                $('.form-row.field-trainingDates').hide()
+                
+                if ($('#id_name').val()) {
+	                $('h2:contains("Training parameters")').parent().append(
+	                	'<div class="form-row">' + 
+	                    	'<div>' +
+	                        	'<label class="required">Training period choice&nbsp;:</label>' +
+	                        	'<div id="chartLoader" class="loader"></div>' +
+	                            '<div id="chart"></div>' +
+	                            '<p class="help">Choice of periods to be used for training. Click the violin plots to select periods, the darker ones are used for training.</p>' +
+	                        '</div>' +
+	                	'</div>'
+	                );
+	                
+	                $('#chart').hide();
+	                getTrainingPeriods();
+                }
+            });
+        })(django.jQuery);
+    </script>
+{% endblock %}

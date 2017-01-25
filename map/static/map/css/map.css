@@ -1,0 +1,103 @@
+#map {
+	height: 100%;
+	width: 100%;
+	margin: 0px;
+	padding: 0px;
+	position:fixed;
+	top: 0px;
+	left:0px;
+	z-index: -1;
+}
+        
+#webGL {
+	height: 100%;
+	width: 100%;
+	margin: 0px;
+	padding: 0px;
+	position:fixed;
+	top: 0px;
+	left:0px;
+	z-index: 0;
+}
+    	
+.allContent {
+	margin: 0px;
+	padding: 0px;
+	overflow: hidden;
+}
+
+.datGuiIcon {
+	width: 20px;
+	height: 20px;
+	position: relative;
+	top: 4px;
+	margin-right: 4px;
+}
+
+#hidden {
+	width: 0px;
+	heigth: 0px;
+	position: fixed;
+}
+
+#rasterPannel {
+	width: 245px;
+	height: 125px;
+	position: fixed;
+	left: 50px;
+	background-color: black;
+	z-index: 99;
+}
+
+#colormap {
+	margin: 10px;
+    height: 15px;
+}
+
+.pannelNumber {
+	text-shadow: 0 -1px 0 #111
+	font: small Verdana,Arial,sans-serif;
+	color: #2fa1d6;
+	background: #303030;
+	outline: none;
+	border: 0;
+	margin-left: 10px;
+	margin-right: 10px;
+	width: 25%;
+}
+
+#rasterMin {
+	float: left;
+	text-align: left;
+}
+#rasterUnits {
+	float: right;
+	text-align: center;
+}
+#rasterMax {
+	float: right;
+	text-align: right;
+}
+
+#dateSlider {
+	margin: 10px;
+	margin-bottom: 5px;
+}
+
+#dateSelect {
+	margin: 10px;
+	margin-top: 5px;
+}
+
+#dateText {
+	margin: 0px;
+	margin-right: 0px;
+}
+
+.dateButton {
+	float: right;
+}
+
+.mfp-content {
+	height:90%;
+ }

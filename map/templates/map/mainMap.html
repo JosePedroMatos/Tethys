@@ -1,0 +1,140 @@
+{% load staticfiles %}
+
+<html lang="en">
+  <head>
+    
+    
+    {{ LOCAL_JAVASCIPT|safe }}
+    {{ LOCAL_MAP|safe }}
+    
+    <script src="{% static 'map/scripts/three.min.js' %}"></script>
+	<script src="{% static 'map/scripts/threeGeoJSON.js' %}"></script>
+	<script src="{% static 'map/scripts/jquery.mousewheel.min.js' %}"></script>
+	<script src="{% static 'map/scripts/dat.gui.min.js' %}"></script>
+	
+	<script src="{% static 'map/scripts/map.js' %}"></script>
+    
+    <script type="text/javascript" src="{% static 'admin/scripts/jquery.magnific-popup.js' %}"></script>
+    
+    <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+    <link rel="stylesheet" href="http://openlayers.org/en/v3.12.1/css/ol.css" type="text/css">
+    <link rel="stylesheet" href="{% static 'map/css/map.css' %}" type="text/css">
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/magnific-popup.css' %}" />
+    
+    <style>
+        #loading {
+            position: absolute;
+            margin: auto;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.75);
+            //border-radius: 3px;
+            z-index: 999;
+        
+            background-image: url("{% static 'main/images/loaderBlack.gif' %}");
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+    </style>
+  </head>
+  
+  <body class='allContent'>
+  	<div id="mapContainer">
+		<div id="map" class="map"></div>
+		<div class="clearfix"></div>
+    	<canvas id="webGL"></canvas> 
+    </div>
+    <div id='hidden'></div>
+    
+    <div id='rasterPannel'>
+        <canvas id='colormap'></canvas>
+        <div>
+            <input type="text" id="rasterMin" class="pannelNumber">
+            
+            <input type="text" id="rasterMax" class="pannelNumber">
+            <input type="text" id="rasterUnits" class="pannelNumber">
+        </div>
+        <br>
+        <br>
+        <div id="dateSlider"></div>
+        <div id='dateSelect'>
+            <input type="text" id="dateText" class="pannelNumber">
+            <button class='dateButton' title="next" id="dateNext" onclick='moveSlider("next");'><span class="ui-icon ui-icon-carat-1-e dateMove"></span></button>
+            <button class='dateButton' title="previous" id="datePrevious" onclick='moveSlider("previous");'><span class="ui-icon ui-icon-carat-1-w dateMove"></span></button>
+        </div>
+    </div>
+    
+    <div id="loading"></div>
+    
+    <script>	
+		//lazy load geoJSONs and series (retrieve data from the server)
+	    var geoJSONControllers = {};
+	    var geoJSONDict = {};
+	    
+        var seriesControllers = {};
+        var seriesDict = {{ series|safe }}
+        
+        var rasterControllers = {};
+        var rasterDict = {{ rasters|safe }}
+        var rasterDates = [];
+        var rasterDateController = [];
+        var rasterElementController = {};
+        //var dateProduct = null;
+        //var selectedRaster = null;
+        
+        var rasterDownloadAvailable = true;
+        var rasterInfo = {name: null, colormap: null, max:null, min:null};
+        
+	    var FizzyText = function() {
+	    	{% for folder, files in geoJSONs.items %}
+	    		geoJSONDict['{{ folder }}'] = {};
+	        	{% for geoJSON in files %}
+	        		this.{{ geoJSON }} = false;
+	        		geoJSONDict.{{ folder }}['{{ geoJSON }}']='{% static 'map/shapes/' %}{{ folder }}/{{ geoJSON }}.geojson';
+	        	{% endfor %}
+	        {% endfor %}
+	        
+			for (k0 in seriesDict) {
+                this[k0 + '_showAll']=false;
+				for (var i0=0; i0<seriesDict[k0].length; i0++) {
+					this[seriesDict[k0][i0].name] = false;
+				}
+			}
+                                    
+            for (k0 in rasterDict) {
+                this[rasterDict[k0].name] = false;
+            }
+	    };
+	    
+        //prepare magnigic popup callbacks
+        $('#hidden').magnificPopup({
+                    fixedBgPos: true,
+                    type: 'iframe',
+                    });
+                    
+        //scale Canvas
+        var tmpCanvas = $('#colormap');
+        tmpCanvas.width(tmpCanvas.parent('').innerWidth()-parseFloat(tmpCanvas.css('marginLeft'))-parseFloat(tmpCanvas.css('marginRight')));
+        
+        //buttons
+        $("#datePrevious").button();
+        $("#dateNext").button();
+        $('.dateMove').parent().css('padding', '0px').parent().css('margin', '0px').css('marginLeft', '2px');
+        
+        //dateSlider
+        var tmpTaken = -parseFloat($('#dateText').css('marginLeft'))-parseFloat($('#dateText').css('marginRight'))-parseFloat($('#dateText').css('paddingLeft'))-parseFloat($('#dateText').css('paddingRight')) -
+        $("#datePrevious").outerWidth()-$("#dateNext").outerWidth()-parseFloat($('#datePrevious').css('marginLeft'))-parseFloat($('#datePrevious').css('marginRight'))-parseFloat($('#dateNext').css('marginLeft'))-parseFloat($('#dateNext').css('marginRight'));
+        $('#dateText').outerWidth($('#dateText').parent('').innerWidth() + Math.floor(tmpTaken) - 8);
+        
+        //hide divs
+        $('#loading').hide();
+        $('#rasterPannel').hide();
+        
+    </script>
+  </body>
+</html>

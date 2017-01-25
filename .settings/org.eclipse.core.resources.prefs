@@ -1,0 +1,8 @@
+eclipse.preferences.version=1
+encoding//gpu/errorMetrics.py=utf-8
+encoding//gpu/manager.py=utf-8
+encoding//gpu/optAlgorithm.py=utf-8
+encoding//gpu/psoAlt.py=utf-8
+encoding//timeSeries/migrations/0041_auto_20161115_1420.py=utf-8
+encoding//timeSeries/migrations/0042_auto_20161115_1424.py=utf-8
+encoding//timeSeries/migrations/0043_auto_20170111_1823.py=utf-8

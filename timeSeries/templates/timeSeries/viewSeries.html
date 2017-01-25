@@ -1,0 +1,146 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Tethys: Water Resources Database Series Upload</title>
+		<link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+		
+		{{ LOCAL_JAVASCIPT|safe }}
+        
+        <script src="{% static 'timeSeries/scripts/ajax.js' %}"></script>
+		<script src="{% static 'timeSeries/scripts/forge.min.js' %}"></script>
+		
+        <script src="{% static 'timeSeries/scripts/d3.min.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/d3.layout.min.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/rickshaw.min.js' %}"></script>
+        
+        <script src="{% static 'timeSeries/scripts/seriesInfo.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/decryptData.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/plotChart.js' %}"></script>
+		<script src="{% static 'timeSeries/scripts/Blob.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/FileSaver.min.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/xlsx.core.min.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/output.js' %}"></script>
+        
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/rickshaw.min.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/chartBlack.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/viewSeries.css' %}" />
+		
+		<script>
+			var data = {{ series|safe }};
+			var errors = {{ errors|safe }};
+			var fields = {{ fields|safe }};
+			
+			// Prepare plot
+			var valid = [];
+			var i0 = 0;
+			for (k0 in data) {
+				var series = data[k0];
+				if (series['values'].length>0) {
+					series['key'] = hashPassword(series.encryptionKey);
+					series['values'] = decryptData(series['values'], key=series['key']);
+					series['order'] = i0;
+					valid.push(k0);					
+					i0++;
+				}
+			}
+			
+			/*document.addEventListener("click", function(){
+			    fTest();
+			});*/
+			
+			
+		</script>
+		<style>
+			.loader {
+				height: 240px;
+				background-image: url("{% static 'main/images/loaderBlack.gif' %}");
+				background-repeat: no-repeat;
+				background-position: center center;
+			}
+			
+			#error {
+				margin: 0 auto;
+				width: 80%;
+				margin-top: 20px;
+				margin-bottom: 20px;
+				text-align: center;
+			}
+			#results {
+				background-color: #e6e6e6;
+				overflow: auto;
+			}
+			#QQ,#numeric {
+				background-color: #e6e6e6;
+				color: #000000;
+				float: left;
+				width: 50%;
+				text-align: left:
+			}
+			#QQ {
+				text-align: right;
+			}
+			
+		</style>
+		
+	</head>
+	<body>
+		<div id="header">
+			<h2 id="headerText">Time series view [</h2>
+		</div>
+	
+		<!-- Summary table -->
+		<div id="table" class="summary">
+			<table>
+				<thead>
+					<tr>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+		
+		<!-- Actions -->
+		<div id='actions'>
+			<input type="button" class="menuButton" onclick="getData(getBoundDates().fallback,getBoundDates().from);" value={% trans 'More' %}></button>
+			<input id='download' type="button" class="menuButton" onclick="getXLSX();" value={% trans 'Download' %}></button>
+			<div id='filter'>
+			 	<input id="selectFilter" name="value">
+				<input type="button" class="menuButton" onclick="fFilter();" value={% trans 'Filter' %}></button>
+			</div>
+			<div id='forecast'>
+			 	<select id='selectForecast'></select> 
+				<input type="button" class="menuButton" onclick="showForecast();" value={% trans 'Forecast' %}></button>
+			</div>
+			<div id='hindcast'>
+				<input id="selectHindcast" name="value">
+				<input type="button" class="menuButton" onclick="showHindcast();" value={% trans 'Hindcast' %}></button>
+			</div>
+		</div>
+
+		<!-- Plot -->
+		<div id='error' class="ui-state-error"></div>
+		<div id="chartLoader" class="loader"></div>
+		<div id='chartContainer'>
+			<div id="chart"></div>
+			<div id="slider"></div>
+			<div id="legend"></div>
+		</div>
+	
+		<!-- Details -->
+		<div id='details'>
+		</div>
+		
+		<!-- QQ plot -->
+		<div id='results'>
+			<div id='QQ'></div>
+			<div id='numeric'></div>
+		</div>
+	</body>
+</html>

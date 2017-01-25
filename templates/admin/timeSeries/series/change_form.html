@@ -1,0 +1,91 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls admin_static admin_modify %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script>(function($){jQuery = $.noConflict(true);})(django.jQuery);</script>
+{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/magnific-popup.css' %}" />
+    <style>
+        .mfp-content {
+            height:90%;
+ 		}
+ 		.custom-row {
+ 			text-align: left;
+ 		}
+ 		#uploadData {
+ 			margin: 2px 0;
+ 		}
+    </style>
+{% endblock %}
+
+
+{% block admin_change_form_document_ready %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% static 'admin/scripts/jquery.magnific-popup.js' %}"></script>
+    <script type="text/javascript">
+        (function($) {
+        	function addMessage(msg, msgClass) {
+        		if ($('.messagelist').length==0) {
+	        		$('.breadcrumbs').after('<ul class="messagelist"></ul>');
+	        		console.log('nomess');
+	        	}
+        		$('.messagelist').html('<li class="' + msgClass + '">' +
+    				msg +
+    				'</li>'
+    			);
+        	}
+        	
+        	function deleteData(event) {
+        		event.preventDefault();
+        		$.ajax({
+        	        url : $('#' + this.id).attr('href') , // the endpoint
+        	        type : 'POST', // http method
+        	        data : {
+        	        	csrfmiddlewaretoken: '{{ csrf_token }}', // data sent with the post request
+        	        },
+        	
+        	        // handle a successful response
+        	        success : function(json) {
+        	        	addMessage(json.message[1], json.message[0]);
+        	        },
+        	        
+	        	    // handle a non-successful response
+					error : function(xhr,errmsg,err) {
+						addMessage(err, 'error');
+					}
+				});
+        	}
+        	
+            $(document).ready(function() {
+				if (!$('#id_name').val()) {
+					$('.form-row.field-encryptionKey').prepend(
+	                		'<div class="submit-row custom-row">' +
+	                		'<input id="uploadData" value="Upload data" type="submit">' +
+	                		'</div>');
+					
+					$('#uploadData').attr('href', '/timeSeries/upload/series/' +  $('#id_name').val());
+					$('#uploadData').prop('disabled', true);
+				} else {
+					$('.form-row.field-encryptionKey').prepend(
+	                		'<div class="submit-row custom-row">' +
+	                		'<input id="uploadData" value="Upload data" type="submit">' +
+	                		'<p class="deletelink-box"><a id="deleteData" class="deletelink">Delete data</a></p>'+
+	                		'</div>');
+					
+					$('#uploadData').attr('href', '/timeSeries/upload/series/' +  $('#id_name').val());
+					$('#deleteData').click(deleteData);
+					$('#deleteData').attr('href', '/timeSeries/deleteValues/series/' +  $('#id_name').val());
+                };
+                
+                $('#uploadData').magnificPopup({
+                    fixedBgPos: true,
+                    type: 'iframe',
+                    });
+            });
+        })(django.jQuery);
+    </script>
+{% endblock %}

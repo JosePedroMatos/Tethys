@@ -1,0 +1,85 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<html>
+    <head>
+        <title>Tethys: Header </title>
+        <link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+        
+        {{ LOCAL_JAVASCIPT|safe }}
+        
+        <script src="{% static 'main/scripts/main.js' %}"></script>
+        
+        <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+        
+        <style>
+            body {
+                overflow: hidden;
+                margin: 0px;
+                padding: 0px;
+            }
+            td {
+            	text-align: center;
+            }
+        </style>
+        
+        <script>
+        	var user = '{{ user }}';
+        
+        	$(document).ready(function() {
+	        	if (user=='__noUser__') {
+	        		$('#logout').hide();
+	        		$('#welcomeHeader').hide();
+	        	} else {
+	        		$('#login').hide();
+	        		$('#register').hide();
+	        		$('#welcomeHeader').append(' ' + user);
+	        		$('#loginHeader').hide();
+	        	}
+        		
+	        	$('#headerLeftDiv').css('background', 'url({% static 'main/images/logos/logo.png' %}) no-repeat center center');
+	        	$('#headerLeftDiv').css('background-size', 'contain');
+	        	
+	        	$("input:button").width(135);
+	            $("input:button").button();
+        	});
+        </script>
+    </head>
+    <body>
+        <div id="#headerWrapperDiv">
+            <div id="headerLeftDiv" onclick="fLoadHome();">
+            </div>
+            <div id="headerRightDiv">
+            	<div class="menu">
+		            <table border="0" align="center">  
+		                <tbody>
+		                    <tr>
+		                        <td><input id='login' type="button" class="menuButton" value="{% trans 'Login' %}" onclick="parent.fLogin();">
+		                        </td>
+		                    </tr>
+		                    <tr>
+		                        <td><input id='logout' type="button" class="menuButton" value="{% trans 'Logout' %}" onclick="location='/accounts/logout/?next=/header.html';">
+		                        </td>
+		                    </tr>
+		                    <tr>
+		                        <td><input id='register' type="button" class="menuButton" value="{% trans 'Register' %}" onclick="location='/accounts/register/';">
+		                        </td>
+		                    </tr>
+		                    <tr>
+		                        <td><a href="mailto:zambezi.mail@gmail.com?Subject=Website%20support">{% trans 'Contact us' %}</a>
+		                        </td>
+		                    </tr>
+		                </tbody>
+		            </table>
+		        </div>
+            
+            </div>
+            <div id="headerCenterDiv">
+                <h1>{% trans 'TethysHeader' %}</h1>
+                <h2 id='welcomeHeader'>{% trans 'WelcomeHeader' %}</h2>
+                <h2 id='loginHeader'>{% trans 'LoginHeader' %}</h2>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,124 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tethys: Water Resources Database</title>
+        <link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+        
+        {{ LOCAL_JAVASCIPT|safe }}
+        
+        <script src="{% static 'main/scripts/main.js' %}"></script>
+        <script type="text/javascript" src="{% static 'admin/scripts/jquery.magnific-popup.js' %}"></script>
+        
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'admin/css/magnific-popup.css' %}" />
+
+		<style>
+        </style>
+        
+        <script>
+	        $(document).ready(function() {
+	        	headerHeight = $("#divHeaderFrame").height();
+	        	footerHeight = $("#divFooterFrame").height();
+	        	$('#hideFrameHeader').hide();
+	        	$('#hideFrameFooter').hide();
+	        	
+	        	// Correcting the horizontal dimensions of the middle divs
+	        	fSetWidth();
+	        	
+	        	// hovering behavior for the button toggling the header frame
+	        	$("#divHeaderFrame").hover(function () {
+	        		$("#hideFrameHeader").show();
+	        		}, function () {
+	        			if ($(this).height()==0) {
+	        				$("#hideFrameHeader").show();
+	        			} else {
+	        				$("#hideFrameHeader").hide();
+	        			}
+	        		}
+	        	);
+	        	
+	        	// hovering behavior for the button toggling the footer frame
+	        	$("#divFooterFrame").hover(function () {
+	        			$("#hideFrameFooter").show();
+	        		}, function () {
+	        			if ($(this).height()==0) {
+	        				$("#hideFrameFooter").show();
+	        			} else {
+	        				$("#hideFrameFooter").hide();
+	        			}
+	        		}
+	        	);
+	        	
+	        	//Hide both middle divs when the resize item is pressed to prevent flicker
+	        	window.setTimeout(function() {
+	        	    $("#divLeftFrame").find(".ui-resizable-handle").on("mousedown", function() {
+	        	        $("#leftFrame").hide();
+	        	        $("#mainFrame").hide();
+	        	        resizing = true;
+	        	    });
+	        	    $(document).on("mouseup", function() {
+	        	        if (resizing) {
+	        	        	$("#leftFrame").show();
+	        	            $("#mainFrame").show();
+	        	            $(".ui-resizable-e").hide();
+	        	            
+	        	            resizing = false;
+	        	        }
+	        	    });
+	        	}, 50);
+	        	
+	        	// Function doing the resizing
+	        	$("#divLeftFrame").resizable({
+	        		autoHide: true,
+	        	    handles: 'e',
+	        	    resize: function(e, ui) {
+	        	        var parent = ui.element.parent();
+	        	        var remainingSpace = parent.width() - ui.element.outerWidth(),
+	        	                divTwo = ui.element.next(),
+	        	                divTwoWidth = (remainingSpace - (divTwo.outerWidth() - divTwo.width())) / parent.width() * 100 + "%";
+	        	        divTwo.width(divTwoWidth);
+	        	    },
+	        	    stop: function(e, ui) {
+	        	        var parent = ui.element.parent();
+	        	        ui.element.css({
+	        	            width: ui.element.width() / parent.width() * 100 + "%",
+	        	        });
+	        	    }
+	        	});
+	        	
+	        	$('.hideFrame').css('background-image', 'url({% static 'main/css/images/vDragHandle.png' %})');
+	        	$('.ui-resizable-e').css('background-image', 'url({% static 'main/css/images/hDragHandle.png' %})');
+	        	
+	        	$('#hidden').magnificPopup({
+                    fixedBgPos: true,
+                    type: 'iframe',
+                    });
+	        });
+        </script>
+    </head>
+    <body id="indexBody">
+		<div id="divHeaderFrame">
+			<iframe id="headerFrame" src="header.html">This website uses iframes. Please update your browser.</iframe>
+			<div id='hideFrameHeader' class='hideFrame' onclick="fToggleHeader();"></div>
+		</div>
+    
+        <div id="divMiddleWrap">
+            <div id="divLeftFrame">
+                <iframe id="leftFrame" src="left.html">This website uses iframes. Please update your browser.</iframe>
+            </div>
+            <div id="divMainFrame">
+                <iframe id="mainFrame" src="main.html">This website uses iframes. Please update your browser.</iframe>
+            </div>
+        </div>
+        
+        <div id="divFooterFrame">
+        	<iframe id="footerFrame" src="logos.html">This website uses iframes. Please update your browser.</iframe>
+        	<div id='hideFrameFooter' class='hideFrame' onclick="fToggleFooter();"></div>
+        </div>
+        <div id='hidden'></div>
+	</body>
+</html>

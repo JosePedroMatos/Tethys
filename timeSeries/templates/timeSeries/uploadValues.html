@@ -1,0 +1,231 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Tethys: Water Resources Database Series Upload</title>
+		<link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+		
+		{{ LOCAL_JAVASCIPT|safe }}
+        
+        <script src="{% static 'timeSeries/scripts/ajax.js' %}"></script>
+		<script src="{% static 'timeSeries/scripts/forge.min.js' %}"></script>
+		
+        <script src="{% static 'timeSeries/scripts/xlsx.core.min.js' %}"></script>
+        
+        <script src="{% static 'timeSeries/scripts/d3.min.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/d3.layout.min.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/rickshaw.min.js' %}"></script>
+        
+        <script src="{% static 'timeSeries/scripts/plotChart.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/encryptData.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/decryptData.js' %}"></script>
+        
+        <link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/rickshaw.min.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}" />
+    	<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}" />
+	
+	<style>
+	.loader {
+		height: 80px;
+		background-image: url("{% static 'main/images/loader.gif' %}");
+		background-repeat: no-repeat;
+		background-position: center center;
+	}
+	
+	#message {
+		margin: 0 auto;
+		width: 80%;
+		margin-top: 10px;
+		margin-bottom: 10px;
+		text-align: center;
+		padding: 10px;
+	}
+	</style>
+	
+	</head>
+	<body>
+		<div>
+    		<div id="header">
+        		<div id="branding">
+					<h1 id="site-name">Upload data</h1>
+        		</div>
+    	    </div>
+		</div>
+		
+		<div class="breadcrumbs">
+			{{ type }} series [{{ series }}] @ {{ location }} | {{ timeStep }} time step in [{{ units }}] by {{ provider }}
+		</div>
+		
+		<div id="content" class="colM">
+			<div id="content-main">
+				<fieldset class="module aligned" id="passwordFieldSet">
+					<h2>0. Password</h2>
+					<div class="description">Needed as the data is meta encrypted.</div>
+					<input id="passwordBox" type="text" name="password"><br>
+				</fieldset>
+			
+				<fieldset class="module aligned ">
+					<h2>1. Import</h2>
+					<div class="description">Data in the Excel .xlsx format. The file should contain exaclty two columns with no headers: date [yyyy/mm/dd HH:MM:SS] and value [float]</div>
+					<input id="series" type="file" name="file">
+				</fieldset>
+				
+				<fieldset class="module aligned">
+					<h2>2. View</h2>
+					<div class="description">Process and visualize the data. May take some time. Please be patient.</div>
+					<div id="chartLoader" class="loader"></div>
+					<div id="chart"></div> 
+					<div id="slider"></div>
+				</fieldset>
+				
+				<fieldset class="module aligned">
+					<h2>3. Upload</h2>
+					<div class="description">Upload data once it is processed. May take some time for encryption. Please be patient.</div>
+					<form onsubmit="return submit();" method="post" id='uploadPost'>
+		    			{% csrf_token %}
+		    		  	<input type="submit" value="Submit" id='uploadPostButton'/>
+				    </form>
+				    <div id="uploadLoader" class="loader"></div>
+				    <div id="message" class="ui-state-error")></div>
+				</fieldset>
+			</div>
+		</div>
+		
+		<script>
+			var encryptionKey = '{{ encryptionKey }}';
+			var palette = new Rickshaw.Color.Palette({ scheme: 'classic9' });
+			
+			// process and show data
+			var timeStep = '{{ timeStep }}';
+			var timeStepSize = {{ timeStepPeriod }};
+			var dataBase = {{ data|safe }};
+			var dataForDisplay;
+			var decryptedData;
+			var order;
+			
+		  	function handleFile(e) {
+		  		$('#chartLoader').show();
+		  		$('#message').hide();
+		  		
+		  		dataForDisplay = [];
+				setTimeout(function() {
+			  		var files = e.target.files;
+			  		var i,f;
+			  		for (i = 0, f = files[i]; i != files.length; ++i) {
+			    		var reader = new FileReader();
+			    		var name = f.name;
+			    		reader.onload = function(e) {
+			      			var data = e.target.result;
+			
+			      			var workbook = XLSX.read(data, {type: 'binary'});
+			      			var sheetNameList = workbook.SheetNames;
+					      	var worksheet = workbook.Sheets[sheetNameList[0]];
+							
+							var tmpDate;
+					  	   	for (z in worksheet) {
+						    	if(z[0] != '!') {
+									if (z.toString().indexOf('A') === 0) {
+										if (typeof worksheet[z].v == 'number') {
+											tmpDate = (worksheet[z].v-2)*86400000-2208988800000
+										} else {
+											tmpDate = Date.parse(worksheet[z].v.replace(new RegExp('-', 'g'), '/') + ' GMT');
+										}
+									}
+									if (z.toString().indexOf('B') === 0) {
+										var tmpRecord = parseFloat(worksheet[z].v);
+										dataForDisplay.push(new Point(tmpDate, tmpRecord));
+										tmpDate = null;
+									}
+								}
+						  	}
+							
+							$('#uploadPost').show();
+							$('#chartLoader').hide();
+							
+							display(dataForDisplay, timeStep, timeStepSize, order=order);
+			    		};
+			    		reader.readAsBinaryString(f);
+			  		}
+				}, 0);
+			}
+			$('#series').get()[0].addEventListener('change', handleFile, false);
+		</script>
+			
+		<script>
+			// encrypt and upload data
+			$('#uploadPostButton').on('click', function(event){
+				event.preventDefault();
+			
+				// encrypt data
+				$('#uploadLoader').show();
+				$('#uploadPost').hide();
+				$('#chart').empty().hide();
+				$('#slider').hide();
+				var encryptedData = encryptData(dataForDisplay, encrypt=hashPassword(encryptionKey));
+								
+					// send data
+					$.ajax({
+				        url : "uploadTimeSeries/",
+				        type : "POST",
+				        data : {
+				        	series: '{{ series }}',
+							toUpload: JSON.stringify(encryptedData),
+						},
+			
+				        // handle a successful response
+				        success : function(json) {
+				        	$('#uploadLoader').hide();
+				        	$('#message').show().html('Data loaded.');
+				        	
+				        },
+		
+				        // handle a non-successful response
+				        error : function(xhr,errmsg,err) {
+				        	$('#uploadLoader').hide();
+				        	$('#message').show().html('Error.');
+				            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+				        }
+				    });
+			});
+		</script>
+			
+		<script>
+			// prepare page
+			$(document).ready(function() {
+				var contentWidth = $('#chart').parent().children('h2').width();
+				$('#chart').width(contentWidth);
+				$('#chart').height(200);
+				$('#slider').width(contentWidth);
+				
+				$('#passwordBox').width(contentWidth);
+				
+				$('#uploadPost').hide();
+				$('#message').hide();
+				$('.loader').hide();
+				
+				if ('{{ metaEncrypted }}' != 'True') {
+					$('#passwordFieldSet').children().hide();
+					$('#passwordFieldSet').addClass('ui-state-disabled');
+					
+				};
+				
+				decryptedData = decryptData(dataBase, key=hashPassword(encryptionKey));
+				$('#chart').show();
+				$('#slider').show();
+				
+				if (decryptedData.length!=0) {
+					order = 1;
+				  	setTimeout(function () {
+				  		display(decryptedData, timeStep, timeStepSize, order=0);
+				  	},100);
+				} else {
+					order = 0;	
+				}
+			})
+		</script>
+	</body>
+</html>

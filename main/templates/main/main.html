@@ -1,0 +1,107 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tethys: Water Resources Database</title>
+        <link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+        
+        {{ LOCAL_JAVASCIPT|safe }}
+                
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+
+        <script>
+	    	$(function(){
+	        	if (navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/)) {
+	          		$('#ios-notice').removeClass('hidden');
+	          		$('.parallax-container').height( $(window).height() * 0.5 | 0 );
+	        	} else {
+	          		$(window).resize(function(){
+	            		var parallaxHeight = Math.max($(window).height() * 0.8, 200) | 0;
+	            		$('.parallax-container').height(parallaxHeight);
+	          		}).trigger('resize');
+	        	}
+	      	});
+	      
+	      	$(document).ready(function() {
+	      		$("#accordion").accordion({
+              		event: "mouseover"
+          		});
+	      	});
+	    </script>
+	    <script src="{% static 'main/scripts/parallax.min.js' %}"></script>
+    </head>
+    <body id="indexBody">
+    	<section id="intro">
+	    	<div class="container">
+	    		<h1>{% trans 'DatabaseTitle' %}</h1>
+	    		<p>{% trans 'DatabaseDescripiton' %}</p>
+			</div>
+    	</section>
+    	
+ 		<div class="parallax-container" data-parallax="scroll" data-bleed="10" data-image-src="{% static 'main/images/Wilma03.jpg' %}" data-natural-width="1280" data-natural-height="852" style="height: 350px;"></div>
+		
+		<section id="walkthrough">
+	    	<div class="container">
+	    		<h2>{% trans 'WalkthroughButton' %}</h2>
+		        <p>{% trans 'WalkthroughIntro' %}</p>
+		        <div id="accordion">
+	                <p class='accordion' onclick="">{% trans 'WTOverviewTitle' %}</p>
+	                <div class='helper' onclick="">{% trans 'WTOverviewDesc' %}</div>
+	                <p class='accordion' onclick="">{% trans 'WTThisPageTitle' %}</p>
+	                <div class='helper'  onclick="">{% trans 'WTThisPageDesc' %}</div>
+	                <p class='accordion' onclick="">{% trans 'WTRegistrationTitle' %}</p>
+	                <div class='helper'  onclick="">{% trans 'WTRegistrationDesc' %}</div>
+	                <p class='accordion' onclick="">{% trans 'WTTimeSeriesTitle' %}</p>
+	                <div class='helper'  onclick="">{% trans 'WTTimeSeriesDesc' %}</div>
+	                <p class='accordion' onclick="">{% trans 'WTForecastTitle' %}</p>
+	                <div class='helper'  onclick="">{% trans 'WTForecastDesc' %}</div>
+					<p class='accordion' onclick="">{% trans 'WTDocumentationTitle' %}</p>
+	                <div class='helper'  onclick="">{% trans 'WTDocumentationDesc' %}</div>
+	                <p class='accordion' onclick="">{% trans 'WTContributeTitle' %}</p>
+	                <div class='helper'  onclick="">{% trans 'WTContributeDesc' %}</div>
+	               	<p class='accordion' onclick="">{% trans 'WTAccountTitle' %}</p>
+	                <div class='helper'  onclick="">{% trans 'WTAccountDesc' %}</div>
+	            </div>
+			</div>
+		</section>
+		
+		<div class="parallax-container" data-parallax="scroll" data-bleed="10" data-image-src="{% static 'main/images/Wilma02.jpg' %}" data-natural-width="1280" data-natural-height="852" style="height: 350px;"></div>
+		
+		<section id="about">
+	    	<div class="container">
+	    		<h2>{% trans 'AboutButton' %}</h2>
+		        <p>{% trans 'AboutText' %}</p>
+			</div>
+		</section>
+		
+		<div class="parallax-container" data-parallax="scroll" data-bleed="10" data-image-src="{% static 'main/images/Wilma04.jpg' %}" data-natural-width="1280" data-natural-height="719" style="height: 350px;"></div>
+    
+    	<section id="faq">
+	    	<div class="container">
+	    		<h2>{% trans 'FAQButton' %}</h2>
+		        <p>{% trans 'FAQText' %}</p>
+			</div>
+		</section>
+		
+		<div class="parallax-container" data-parallax="scroll" data-bleed="10" data-image-src="{% static 'main/images/Wilma01.jpg' %}" data-natural-width="1280" data-natural-height="853" style="height: 350px;"></div>
+    
+    	<section id="links">
+	    	<div class="container">
+	    		<h2>{% trans 'LinksButton' %}</h2>
+		        <p>{% trans 'LinksText' %}</p>
+			</div>
+		</section>
+		
+		<div class="parallax-container" data-parallax="scroll" data-bleed="10" data-image-src="{% static 'main/images/Jose01.jpg' %}" data-natural-width="1280" data-natural-height="802" style="height: 350px;"></div>
+    
+    	<section id="credits">
+	    	<div class="container">
+	    		<h2>{% trans 'credits' %}</h2>
+		        <p>{% trans 'creditText' %}</p>
+			</div>
+		</section>
+    </body>
+</html>

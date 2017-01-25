@@ -1,0 +1,74 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<html>
+    <head>
+        <title>Tethys: Development Institutions </title>
+        <link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+        
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+        <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+        
+        <style>
+            html {
+                padding: 0px;
+            }
+
+            body {
+                color: #ddd;
+                background-color: white;
+            }
+
+            div#images {
+                height: auto;
+                overflow: hidden;
+                text-align: left;
+                position: absolute;
+                left: 5px;
+                top: 5px;
+            }
+
+            #divAdapt {
+                float: right;
+                line-height: 35px;
+                z-index: 99;
+            }
+
+            #images img {
+                display: inline;
+                margin: 0 10px;
+            }
+
+            img {
+                padding-top: 0px;
+                padding-bottom: 0px;
+                border: none;
+            }
+
+            a {
+                border: none;
+                padding: 0px;
+            }
+            
+            a#adapt {
+                text-align: right;
+                letter-spacing: 6px;
+                font-size: 1.4em;
+                color: #be7429;
+                font-weight: normal;
+                z-index: 99;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="images">
+            <a href="http://www.cces.ethz.ch" target="_blank"><img src="{% static 'main/images/logos/CCES.png' %}" height="40" alt="CCES" onclick="" title="Competence Center Environment and Sustainability"/></a>
+            <a href="http://www.ethz.ch/" target="_blank"><img src="{% static 'main/images/logos/ETH.png' %}" height="40" alt="ETHZ" onclick="" title="Swiss Federal Institute of Technology Zurich"/></a>       
+            <a href="http://www.epfl.ch/" target="_blank"><img src="{% static 'main/images/logos/EPFL.png' %}" height="40" alt="EPFL" onclick="" title="École Polytechnique Fédérale de Lausanne"/></a>
+            <a href="http://lch.epfl.ch/" target="_blank"><img src="{% static 'main/images/logos/LCH.png' %}" height="40" alt="LCH" onclick="" title="Laboratoire de Constructions Hydrauliques"/></a>            
+        </div>              
+        <div id="divAdapt">
+            <a id="adapt" class="h1" href="http://www.cces.ethz.ch/projects/nature/adapt" target="_blank">African Dams Project</a>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,172 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Tethys: Water Resources Database Forecast Training</title>
+		<link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+		
+		{{ LOCAL_JAVASCIPT|safe }}
+        
+        <script src="{% static 'timeSeries/scripts/ajax.js' %}"></script>
+		  
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}" />
+    	<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}" />
+    	
+    	<style>
+    		.left {
+    			float: left;
+    		}
+    		
+    		#startTraining {
+    			background: #ba2121;
+    		}
+    	</style>
+	</head>
+	<body>
+		<script>
+			var info = {{ info }};
+			var forecastId = info.forecast;
+		</script>
+
+		<div>
+    		<div id="header">
+        		<div id="branding">
+					<h1 id="site-name">Forecast model training</h1>
+        		</div>
+    	    </div>
+		</div>
+		<div class="breadcrumbs" id="subtitle">
+			Working on model
+		</div>
+		
+		<div id="content" class="colM">
+			<div id="content-main">			
+				<fieldset class="module aligned collapse">
+					<h2>1. Information</h2>
+					<div class="description">Base information about the forecast.</div>
+					<div class="form-row field-name">
+						<label>Name:</label><label class="required" id='name'></label>
+						<label>Series:</label><label class="required" id='target'></label>
+						<label>Units:</label><label class="required" id='units'></label>
+					</div>
+					<div class="form-row field-name">
+						<label>Lead time:</label><label class="required" id='leadTime'></label>
+						<label>Seasons:</label><label class="required" id='splitBySeason'></label>
+						<label>Type:</label><label class="required" id='type'></label>
+						<label>Size:</label><label class="required" id='nodes'></label>
+						<label>Models:</label><label class="required" id='population'></label>
+						<label>Iterations:</label><label class="required" id='epochs'></label>
+					</div>
+					<div class="form-row field-name">
+						<label>Data processing:</label><label class="required" id='dataExpression'></label>
+						<label>Target processing:</label><label class="required" id='targetExpression'></label>
+					</div>
+				</fieldset>
+				
+				<fieldset class="module aligned">
+					<h2>2. Progress and visualization</h2>	
+					<div class="description">Launch and follow the progress of the training.</div>
+					<div class="form-row">
+						<div id="trainBar" class="submit-row custom-row" style="text-align: left;">
+							<form action="___" method="POST" id="train-form" class="left">
+								{% csrf_token %}
+						    	{{ form }}
+						    	<input type="submit" value="Train" id='startTraining'/>
+							</form>
+						</div>
+						<div class="submit-row custom-row" style="text-align: left;">
+							<div id='progress'></div>
+						</div>
+	        		</div>
+				</fieldset>
+			</div>
+		</div>
+		
+		<script>
+			$('#subtitle').append(' [' + info.forecast + ']');
+			$('#name').html(info.forecast);
+			$('#target').html(info.target);
+			$('#units').html(info.units);
+			$('#leadTime').html(info.leadTime);
+			$('#splitBySeason').html(info.splitBySeason);
+			$('#type').html(info.type);
+			$('#nodes').html(info.nodes);
+			$('#population').html(info.population);
+			$('#epochs').html(info.epochs);
+			$('#dataExpression').html(info.dataExpression);
+			$('#targetExpression').html(info.targetExpression);
+			
+			$('#train-form').on('submit', function(event){
+			    event.preventDefault();
+			    train();
+			});
+			
+			var pendingMessage = 'Please wait for the training to start. Maybe other forecasts are being processed at the moment...';
+			
+			function train() {
+				$('#trainBar').hide();
+				$('#progress').html(pendingMessage);
+			    var jobId;
+			    $.ajax({
+			        url : "train/", // the endpoint
+			        type : "POST", // http method
+			        data : { the_post : $('#post-text').val() }, // data sent with the post request
+
+			        // handle a successful response
+			        success : function(json) {
+			        	$('#progress').html('');
+			        	jobId = json.job;
+			        },
+
+			        // handle a non-successful response
+			        error : function(xhr,errmsg,err) {
+			        	$('#progress').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+			                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+			            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+			            $('#trainBar').show();
+			        }
+			    });
+			    
+			    var intervalID = setInterval(function(){
+			    	$.ajax({
+				        url : "progress/" + jobId, // the endpoint
+				        type : "POST", // http method
+				        data : { the_post : $('#post-text').val() }, // data sent with the post request
+
+				        // handle a successful response
+				        success : function(json) {
+				        	if (json.progress=='DONE') {
+				        		$('#progress').append('<br>' + 'Done!');
+				        		clearInterval(intervalID);
+				        		$('#trainBar').show();
+				        	} else if (json.progress=='PENDING') {
+				        		$('#progress').html(pendingMessage);
+				        	} else {
+				        		$('#progress').html('');
+				        		for (var i0=0; i0<json.progress.message.length; i0++) {
+					        		$('#progress').append(json.progress.message[i0] + '<br>');
+					        	}
+				        	}
+				        	window.scrollTo(0,document.body.scrollHeight);
+				        },
+
+				        // handle a non-successful response
+				        error : function(xhr,errmsg,err) {
+				        	$('#progress').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+				                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+				            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+				            clearInterval(intervalID);
+				            $('#trainBar').show();
+				        }
+				    });
+				},5000);
+			};
+
+		</script>
+		
+	</body>
+</html>

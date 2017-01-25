@@ -1,0 +1,18 @@
+#chart {
+	height: 35%;
+}
+
+.y_ticks {
+	opacity: 1;
+	//fill: #fff;
+}
+
+.x_ticks_d3 {
+	opacity: 1;
+	//fill: #fff;
+}
+
+.line {
+	display: inline-block;
+	margin: 0px;
+}

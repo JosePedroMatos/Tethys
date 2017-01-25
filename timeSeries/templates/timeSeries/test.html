@@ -1,0 +1,104 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Tethys: Water Resources Database map</title>
+		<link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+		
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script src="{% static 'timeSeries/scripts/forge.min.js' %}"></script>
+
+	</head>
+	<body>
+		<script>
+			//data={encyption: [1.1210, 2, 3]};
+			data = 'dados11111000000"';
+			
+			var message = JSON.stringify(data);
+			//var message = data;
+			
+			console.log('Message: ' + message);
+			//console.log('OutputBytes: ' + message.getBytes());
+			
+			//var salt = forge.random.getBytesSync(128);
+			//var key = forge.pkcs5.pbkdf2("Pass Phrase", salt, 40, 16);
+			//var key = 'c95258cee3192e1ffd1e74650a269d6d';
+			var md = forge.md.sha256.create();
+			md.update('chave');
+			console.log('Hashed hex: ' +  md.digest().toHex());
+			var key = md.digest().getBytes();
+			console.log('Hashed key: ' + key);
+			//var iv = forge.random.getBytesSync(16);
+			
+			var cipher = forge.cipher.createCipher('AES-ECB', key);
+			//cipher.start({iv: iv});
+			cipher.start();
+			cipher.update(forge.util.createBuffer(message));
+			cipher.finish();
+			var encrypted = cipher.output.getBytes();
+			var cipherText = forge.util.encode64(encrypted);
+			console.log('Crypto bytes: ' + encrypted);
+			console.log('Crypto string: ' + cipherText);
+			
+			var decipher = forge.cipher.createDecipher('AES-ECB', key);
+			decipher.start();
+			decipher.update(forge.util.createBuffer(forge.util.decode64(cipherText)));
+			decipher.finish();
+			console.log('Output string: ' + JSON.stringify(JSON.parse(decipher.output.getBytes())));
+		</script>
+
+		<form action="/create_post/" method="POST" id="post-form">
+			{% csrf_token %}
+		  	<input type="text" name="lastname" value="Mouse" id="post-text" ><br>
+            <input type="submit" value="Post">
+		</form>
+
+		<script src="{% static 'timeSeries/scripts/ajax.js' %}"></script>
+		<script>
+			// Submit post on submit
+			$('#post-form').on('submit', function(event){
+				event.preventDefault();
+				console.log("form submitted!")  // sanity check
+				create_post();
+			});
+			
+			// AJAX for posting
+			/*function create_post() {
+			    console.log("create post is working!") // sanity check
+			    console.log($('#post-text').val())
+			};*/
+			
+			
+			// Converts an ArrayBuffer directly to base64, without any intermediate 'convert to string then
+			// use window.btoa' step. According to my tests, this appears to be a faster approach:
+			// http://jsperf.com/encoding-xhr-image-data/5
+			
+			function create_post() {
+				$.ajax({
+			        url : "/timeSeries/create_post/", // the endpoint
+			        type : "POST", // http method
+			        data : { the_post : $('#post-text').val(), binData: encrypted, strData: btoa(encrypted)}, // data sent with the post request
+	
+			        // handle a successful response
+			        success : function(json) {
+			            $('#post-text').val(''); // remove the value from the input
+			            console.log('Python result: ' + json['decoded']);
+			            console.log(json); // log the returned json to the console
+			            console.log('success'); // another sanity check
+			        },
+	
+			        // handle a non-successful response
+			        error : function(xhr,errmsg,err) {
+			            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+			                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+			            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+			        }
+			    });
+			};
+			
+		</script>
+	</body>
+</html>

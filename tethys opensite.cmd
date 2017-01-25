@@ -1,0 +1,3 @@
+echo Waiting 10 seconds to launch the website...
+timeout /t 5 /nobreak
+start http://localhost:8000

@@ -1,0 +1,203 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Tethys: Water Resources Database Forecast Training</title>
+		<link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+		
+		{{ LOCAL_JAVASCIPT|safe }}
+        
+        <script src="{% static 'timeSeries/scripts/ajax.js' %}"></script>
+		  
+		<link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}" />
+    	<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}" />
+    	
+    	<style>
+    		.left {
+    			float: left;
+    		}
+    		
+    		#haltTraining {
+    			background: #ba2121;
+    		}
+    	</style>
+	</head>
+	<body>
+		<script>
+			var name = '{{ name }}';
+			var jobId = '{{ jobId }}';
+		</script>
+
+		<div>
+    		<div id="header">
+        		<div id="branding">
+					<h1 id="site-name">Forecast model training</h1>
+        		</div>
+    	    </div>
+		</div>
+		<div class="breadcrumbs" id="subtitle">
+			Working on model
+		</div>
+		
+		<div id="content" class="colM">
+			<div id="content-main">			
+				<fieldset class="module aligned collapse">
+					<h2>1. Current progress</h2>
+					<div class="description">Figures showing the progress of the training for the current case.</div>
+					<div id='charts'></div>
+				</fieldset>
+				
+				<fieldset class="module aligned">
+					<h2>2. Overall progress</h2>	
+					<div class="description">Overall progress of the training: speed, reliability and resolution.</div>
+					<div class="form-row">
+						<div class="submit-row custom-row" style="text-align: left;">
+							<div id='progress'></div>
+						</div>
+	        		
+	        			<div id="cancelBar" class="submit-row custom-row" style="text-align: left;">
+							<form action="___" method="POST" id="cancel-form" class="left">
+								{% csrf_token %}
+						    	{{ form }}
+						    	<input type="submit" value="Cancel" id='haltTraining'/>
+							</form>
+						</div>
+					</div>
+				</fieldset>
+			</div>
+		</div>
+		
+		<script>
+			var plotCounter = -999;
+			$(document).ready(function() {
+				if (jobId!='') {
+					plotCounter
+					trainProgress();
+				}
+			});
+		
+			function mpld3_load_lib(url, callback){
+				var s = document.createElement('script');
+				s.src = url;
+				s.async = true;
+				s.onreadystatechange = s.onload = callback;
+				s.onerror = function(){console.warn("failed to load library " + url);};
+				document.getElementsByTagName("head")[0].appendChild(s);
+			}
+			
+			function drawFigure(data) {
+				if (typeof (mpld3) !== "undefined" && mpld3._mpld3IsLoaded) {
+					// already loaded: just create the figure
+					!function(mpld3) {
+						mpld3.draw_figure("charts", data);
+					}(mpld3);
+				} else if (typeof define === "function" && define.amd) {
+					// require.js is available: use it to load d3/mpld3
+					require.config({
+						paths : {
+							d3 : "https://mpld3.github.io/js/d3.v3.min"
+						}
+					});
+					require([ "d3" ], function(d3) {
+						window.d3 = d3;
+						mpld3_load_lib(
+								"https://mpld3.github.io/js/mpld3.v0.2.js",
+								function() {
+									mpld3.draw_figure("charts", data);
+								});
+					});
+				} else {
+					// require.js not available: dynamically load d3 & mpld3
+					mpld3_load_lib(
+							"https://mpld3.github.io/js/d3.v3.min.js",
+							function() {
+								mpld3_load_lib(
+										"https://mpld3.github.io/js/mpld3.v0.2.js",
+										function() {
+											mpld3.draw_figure("charts", data);
+										})
+							});
+				}
+			}
+
+			function trainProgress() {
+    			$.ajax({
+    				url : "progress/", // the endpoint
+    				type : "POST", // http method
+    				data : {
+    					csrfmiddlewaretoken : '{{ csrf_token }}', // data sent with the post request
+    					jobId: jobId,
+    					plotCounter: plotCounter,
+    				}, // data sent with the post request
+
+    				// handle a successful response
+    				success : function(json) {
+    					if (json.state == 'DONE') {
+    						$('#progress').append('<br>' + 'Done!');
+    						jobId = null;
+    						$('#cancelBar').hide();
+    					} else if (json.state == 'PENDING') {
+    						jobId = json.jobId;
+    						setTimeout(trainProgress, 2000);
+    					} else if (json.state == 'PROGRESS') {
+    						jobId = json.jobId;
+    						if ('plotCounter' in json) {
+    							plotCounter = json.plotCounter;
+    							$('#charts').html('');
+    							drawFigure(json.plot);
+    						}
+    						$('#progress').html('');
+			        		for (var i0=0; i0<json.message.length; i0++) {
+				        		$('#progress').append(json.message[i0] + '<br>');
+				        	}
+    						setTimeout(trainProgress, 2000);
+    					}
+    				},
+
+    				// handle a non-successful response
+    				error : function(xhr, errmsg, err) {
+    					console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+    					jobId = '';
+    				}
+    			});
+    		}
+			
+			$('#subtitle').append(' [' + name + ']');
+
+			$('#cancel-form').on('submit', function(event) {
+				event.preventDefault();
+				cancel();
+			});
+
+			function cancel() {
+				$.ajax({
+    				url : "cancel/", // the endpoint
+    				type : "POST", // http method
+    				data : {
+    					csrfmiddlewaretoken : '{{ csrf_token }}', // data sent with the post request
+    					jobId: jobId,
+    				}, // data sent with the post request
+
+    				// handle a successful response
+    				success : function(json) {
+    					$('#cancelBar').hide();
+    					setTimeout(function() {
+    						$('#progress').append('<br>' + 'Cancelled!');
+    						jobId = null;	
+    					}, 2000);
+    				},
+
+    				// handle a non-successful response
+    				error : function(xhr, errmsg, err) {
+    					$('#progress').append('<br>' + err);
+    				}
+    			});
+			};
+		</script>
+		
+	</body>
+</html>

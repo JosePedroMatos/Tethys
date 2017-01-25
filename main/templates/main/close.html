@@ -1,0 +1,22 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<html>
+    <head>
+        <title>Tethys: Development Institutions </title>
+        <link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+        
+        {{ LOCAL_JAVASCIPT|safe }}
+        
+        <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}" />
+        
+        <script>
+	        $(document).ready(function() {
+	        	parent.document.getElementById('headerFrame').contentWindow.location.reload();
+	        	parent.$.magnificPopup.instance.close(); 
+			});
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

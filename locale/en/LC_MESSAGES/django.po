@@ -1,0 +1,261 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-10-10 15:28+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: .\main\templates\main\404.html:7 .\main\templates\main\404.html:34
+msgid "Page not found"
+msgstr "Page not found"
+
+#: .\main\templates\main\404.html:35
+msgid "We're sorry, but the requested page could not be found."
+msgstr "We're sorry, but the requested page could not be found."
+
+#: .\main\templates\main\500.html:6
+msgid "Home"
+msgstr "Main"
+
+#: .\main\templates\main\500.html:7
+msgid "Server error"
+msgstr "Server error"
+
+#: .\main\templates\main\500.html:11
+msgid "Server error (500)"
+msgstr "Ops. Server error (500)."
+
+#: .\main\templates\main\500.html:14
+msgid "Server Error <em>(500)</em>"
+msgstr "Server Error <em>(500)</em>"
+
+#: .\main\templates\main\500.html:15
+msgid ""
+"There's been an error. It's been reported to the site administrators via "
+"email and should be fixed shortly. Thanks for your patience."
+msgstr ""
+"There's been an error. It's been reported to the site administrators via "
+"email and should be fixed shortly. Thanks for your patience."
+
+#: .\main\templates\main\header.html:58 .\templates\registration\login.html:64
+msgid "Login"
+msgstr "Login"
+
+#: .\main\templates\main\header.html:62
+msgid "Logout"
+msgstr "Logout"
+
+#: .\main\templates\main\header.html:66
+msgid "Register"
+msgstr "Register"
+
+#: .\main\templates\main\header.html:70
+msgid "Contact us"
+msgstr "Contact us"
+
+#: .\main\templates\main\header.html:79
+msgid "TethysHeader"
+msgstr "Tethys African Water Resources"
+
+#: .\main\templates\main\header.html:80
+msgid "WelcomeHeader"
+msgstr "Welcome "
+
+#: .\main\templates\main\header.html:81
+msgid "LoginHeader"
+msgstr "Welcome, please log-in"
+
+#: .\main\templates\main\left.html:73
+msgid "ContentsTitle"
+msgstr "Contents"
+
+#: .\main\templates\main\left.html:76
+msgid "IntroductionTitle"
+msgstr "Introduction"
+
+#: .\main\templates\main\left.html:80 .\main\templates\main\main.html:48
+msgid "WalkthroughButton"
+msgstr "Walkthrough"
+
+#: .\main\templates\main\left.html:84 .\main\templates\main\main.html:75
+msgid "AboutButton"
+msgstr "About"
+
+#: .\main\templates\main\left.html:88 .\main\templates\main\main.html:84
+msgid "FAQButton"
+msgstr "FAQ"
+
+#: .\main\templates\main\left.html:92 .\main\templates\main\main.html:93
+msgid "LinksButton"
+msgstr "Links"
+
+#: .\main\templates\main\left.html:101
+msgid "TimeSeriesTitle"
+msgstr "Monitoring"
+
+#: .\main\templates\main\left.html:105
+msgid "TimeSeriesButton"
+msgstr "Browse"
+
+#: .\main\templates\main\left.html:114
+msgid "DocumentsTitle"
+msgstr "Documentation"
+
+#: .\main\templates\main\left.html:118
+msgid "WaterResourcesButton"
+msgstr "Search"
+
+#: .\main\templates\main\left.html:122
+msgid "UploadDataButton"
+msgstr "Contribute"
+
+#: .\main\templates\main\left.html:131
+msgid "ManagementTitle"
+msgstr "Management"
+
+#: .\main\templates\main\left.html:135
+msgid "ManageAccountButton"
+msgstr "Manage account"
+
+#: .\main\templates\main\main.html:39
+msgid "DatabaseTitle"
+msgstr "Tethys: The African Water Resources Data Base"
+
+#: .\main\templates\main\main.html:40
+msgid "DatabaseDescripiton"
+msgstr ""
+"Tethys is a non-profit work under development dedicated to nurture and "
+"support hydrological and water resources management in Afica. It is part of "
+"the <a href='http://www.cces.ethz.ch/projects/nature/adapt' "
+"target='_blank'>African Dams Project</a> and benefits from the support of "
+"numerous institutions."
+
+#: .\main\templates\main\main.html:49
+msgid "WalkthroughIntro"
+msgstr "Here you can find some videos about how the website works."
+
+#: .\main\templates\main\main.html:51
+msgid "WTOverviewTitle"
+msgstr "Start"
+
+#: .\main\templates\main\main.html:52
+msgid "WTOverviewDesc"
+msgstr "General info about the website, its main components and aims."
+
+#: .\main\templates\main\main.html:53
+msgid "WTThisPageTitle"
+msgstr "This webpage"
+
+#: .\main\templates\main\main.html:54
+msgid "WTThisPageDesc"
+msgstr ""
+"Information on how to use the webpage to visit other parts of the site, "
+"manage your account, etc."
+
+#: .\main\templates\main\main.html:55
+msgid "WTRegistrationTitle"
+msgstr "Registration"
+
+#: .\main\templates\main\main.html:56
+msgid "WTRegistrationDesc"
+msgstr "How to register a new user."
+
+#: .\main\templates\main\main.html:57
+msgid "WTTimeSeriesTitle"
+msgstr "Monitoring (time series)"
+
+#: .\main\templates\main\main.html:58
+msgid "WTTimeSeriesDesc"
+msgstr ""
+"Information about the monitoring component. How to visualize time series and "
+"get their values"
+
+#: .\main\templates\main\main.html:59
+msgid "WTForecastTitle"
+msgstr "Operational forecasts"
+
+#: .\main\templates\main\main.html:60
+msgid "WTForecastDesc"
+msgstr ""
+"Information on the operational forecasts that are made. Access and use the "
+"data."
+
+#: .\main\templates\main\main.html:61
+msgid "WTDocumentationTitle"
+msgstr "Documentation"
+
+#: .\main\templates\main\main.html:62
+msgid "WTDocumentationDesc"
+msgstr ""
+"Information about the water resources database. How to look for specific "
+"contents, how to download, and how to distribute them."
+
+#: .\main\templates\main\main.html:63
+msgid "WTContributeTitle"
+msgstr "Contribute"
+
+#: .\main\templates\main\main.html:64
+msgid "WTContributeDesc"
+msgstr "How to submit contents to the water resources database."
+
+#: .\main\templates\main\main.html:65
+msgid "WTAccountTitle"
+msgstr "Manage account"
+
+#: .\main\templates\main\main.html:66
+msgid "WTAccountDesc"
+msgstr ""
+"How to manage your user account. Manage permissions and access protected "
+"content."
+
+#: .\main\templates\main\main.html:76
+msgid "AboutText"
+msgstr "About"
+
+#: .\main\templates\main\main.html:85
+msgid "FAQText"
+msgstr "About"
+
+#: .\main\templates\main\main.html:94
+msgid "LinksText"
+msgstr "Links"
+
+#: .\main\templates\main\main.html:102
+msgid "credits"
+msgstr "Credits"
+
+#: .\main\templates\main\main.html:103
+msgid "creditText"
+msgstr "The photos in this page were most kindly shared by Wilma Blaser."
+
+#: .\templates\admin\base_site.html:3
+msgid "Django site admin"
+msgstr "Administration"
+
+#: .\timeSeries\templates\timeSeries\viewSeries.html:82
+msgid "More"
+msgstr "More"
+
+#: .\timeSeries\templates\timeSeries\viewSeries.html:83
+msgid "Download"
+msgstr "Download"
+
+#: .\timeSeries\templates\timeSeries\viewSeries.html:86
+msgid "Forecast"
+msgstr "Forecast"
+
+#: .\timeSeries\templates\timeSeries\viewSeries.html:90
+msgid "Hindcast"
+msgstr "Hindcast"

@@ -1,0 +1,150 @@
+{% extends "admin/change_form.html" %} {% load i18n admin_urls admin_static admin_modify %} {% block extrahead %} {{ block.super }}
+<script>
+	(function($) {
+		jQuery = $.noConflict(true);
+	})(django.jQuery);
+</script>
+{% endblock %} {% block extrastyle %} {{ block.super }}
+<style>
+.custom-row {
+	text-align: left;
+}
+
+#storeData, #updateData, #deleteData {
+	margin: 2px 4px;
+}
+
+#deleteData {
+	background-color: rgb(186, 33, 33);
+}
+</style>
+{% endblock %} {% block admin_change_form_document_ready %} {{ block.super }}
+
+<script type="text/javascript">
+	var jobId = null;
+
+	(function($) {
+		function addMessage(msg, msgClass) {
+			if ($('.messagelist').length == 0) {
+				$('.breadcrumbs').after('<ul class="messagelist"></ul>');
+			}
+			$('.messagelist').html(
+					'<li id="message" class="' + msgClass + '">' + msg
+							+ '</li>');
+		}
+
+		function storeData(event) {
+			event.preventDefault();
+			$.ajax({
+				url : $('#' + this.id).attr('href'), // the endpoint
+				type : 'POST', // http method
+				data : {
+					csrfmiddlewaretoken : '{{ csrf_token }}', // data sent with the post request
+				},
+				success : function(json) {
+					addMessage(json.message[1], json.message[0]);
+					jobId = json.jobId;
+					storeDataProgress();
+				},
+				error : function(xhr, errmsg, err) {
+					addMessage(err, 'error');
+				}
+			});
+		}
+		
+		function updateData(event) {
+			event.preventDefault();
+			$.ajax({
+				url : $('#' + this.id).attr('href'), // the endpoint
+				type : 'POST', // http method
+				data : {
+					csrfmiddlewaretoken : '{{ csrf_token }}', // data sent with the post request
+				},
+				success : function(json) {
+					addMessage(json.message[1], json.message[0]);
+					jobId = json.jobId;
+					storeDataProgress();
+				},
+				error : function(xhr, errmsg, err) {
+					addMessage(err, 'error');
+				}
+			});
+		}
+		
+		function storeDataProgress() {
+			$.ajax({
+				url : $('#storeData').attr('href') + "progress/", // the endpoint
+				type : "POST", // http method
+				data : {
+					csrfmiddlewaretoken : '{{ csrf_token }}', // data sent with the post request
+					jobId: jobId,
+				}, // data sent with the post request
+
+				// handle a successful response
+				success : function(json) {
+					console.log(json);
+					if (json.state == 'DONE') {
+						jobId = null;
+						addMessage(json.message[1], json.message[0]);
+					} else if (json.state == 'PENDING') {
+						jobId = json.jobId;
+						addMessage(json.message[1], json.message[0]);
+						setTimeout(storeDataProgress, 10000);
+					} else if (json.state == 'PROGRESS') {
+						jobId = json.jobId;
+						addMessage(json.message[1], json.message[0]);
+						if (json.progress) {
+							$('#message').append(' (' + Math.round(json.progress * 100) + '%)');
+						}
+						setTimeout(storeDataProgress, 2000);
+					}
+				},
+
+				// handle a non-successful response
+				error : function(xhr, errmsg, err) {
+					console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+					jobId = null;
+				}
+			});
+		}
+
+		$(document)
+				.ready(
+						function() {
+							$('.submit-row')
+									.before(
+											'<fieldset class="module aligned ">'
+													+ '<h2>Download data</h2>'
+													+ '<div class="description">Download or update data from the internet. May take a very long time.</div>'
+													+ '<div class="submit-row custom-row">'
+													//+ '<input id="deleteData" value="Delete data" type="submit">'
+													+ '<input id="storeData" value="Prepare data" type="submit">'
+													+ '<input id="updateData" value="Update data" type="submit">'
+													+ '</div>' + '</fieldset>');
+
+							$('#storeData').attr(
+									'href',
+									'/timeSeries/satelliteStore/'
+											+ $('#id_name').val() + '/');
+							$('#storeData').click(storeData);
+							$('#updateData').attr(
+									'href',
+									'/timeSeries/satelliteUpdate/'
+											+ $('#id_name').val() + '/');
+							$('#updateData').click(updateData);
+							/*$('#deleteData').attr('href',
+									'/timeSeries/' + $('#id_name').val());
+							$('#deleteData').click(deleteData);*/
+
+							if (!$('#id_name').val()) {
+								$('#storeData').prop('disabled', true);
+								$('#updateData').prop('disabled', true);
+							} else {
+								$('#storeData').prop('disabled', false);
+								$('#updateData').prop('disabled', false);
+								storeDataProgress();
+							}
+						});
+	})(django.jQuery);
+</script>
+{% endblock %}
