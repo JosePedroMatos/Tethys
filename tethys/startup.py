@@ -5,7 +5,7 @@ Responsible for checking and including default database entries into Tethys.
 '''
 import os
 from Crypto.Random import random
-from timeSeries.models import DataProvider, DataType, Colormap
+from timeSeries.models import DataProvider, DataType, Colormap, Location
 from django.contrib.auth.models import User
 from django.core.files import File
 
@@ -49,6 +49,16 @@ def prepareTethys():
                 dataProvider.icon.save('tethys.png', File(f), save=True)
                 dataProvider.save()
     
+        # Add Unknown location
+        tmp = Location.objects.filter(name='Unknown')
+        if len(tmp)==0:
+            location = Location(name='Unknown',
+                                lat=0.0,
+                                lon=0.0,
+                                introducedBy=user,
+                                observations='Introduced automatically at server startup.')
+            location.save()
+    
         # Add discharge data type
         tmp = DataType.objects.filter(abbreviation='Q', name='Discharge')
         if len(tmp)==0:
@@ -57,7 +67,7 @@ def prepareTethys():
                                     name='Discharge',
                                     units='m3/s',
                                     description='River discharge in m3/s',
-                                    observations=None,
+                                    observations='Introduced automatically at server startup.',
                                     introducedBy=user,
                                     )
                 dataType.icon.save('discharge.png', File(f), save=True)
@@ -71,7 +81,7 @@ def prepareTethys():
                                     name='Water Level',
                                     units='m',
                                     description='Water level in m (relative to the talweg)',
-                                    observations=None,
+                                    observations='Introduced automatically at server startup.',
                                     introducedBy=user,
                                     )
                 dataType.icon.save('waterLevel.png', File(f), save=True)

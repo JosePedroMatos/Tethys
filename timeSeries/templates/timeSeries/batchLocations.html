@@ -5,7 +5,7 @@
 <html>
 	<head>
 		<meta charset=utf-8>
-		<title>Tethys: Water Resources Database Series Upload</title>
+		<title>Tethys: Water Resources Database Locations Upload</title>
 		<link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
 		
 		{{ LOCAL_JAVASCIPT|safe }}
@@ -206,7 +206,6 @@
 			}
 			
 			function createTable(tableData) {
-				console.log(tableData);
 				$('#dataTableWrapper').html('');
 				var table = document.createElement('table');
 				var tableHead = document.createElement('thead');
