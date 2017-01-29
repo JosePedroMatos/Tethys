@@ -19,6 +19,14 @@
  		#uploadData {
  			margin: 2px 0;
  		}
+ 		#batchUpload {
+ 			margin: 0 8px 0 0;
+			background: #417690;
+			text-transform: uppercase;
+			font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+			font-weight: normal;
+			font-size: 13px;
+		}
     </style>
 {% endblock %}
 
@@ -82,6 +90,13 @@
                 };
                 
                 $('#uploadData').magnificPopup({
+                    fixedBgPos: true,
+                    type: 'iframe',
+                    });
+                
+                $('.submit-row').find('.default').after('<p class="deletelink-box"><a id="batchUpload" href="/timeSeries/admin/series/addBatch/" class="deletelink">Add from Excel</a></p');
+        		
+                $('#batchUpload').magnificPopup({
                     fixedBgPos: true,
                     type: 'iframe',
                     });

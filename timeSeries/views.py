@@ -1063,9 +1063,64 @@ def batchLocationsRegister(request):
                         content_type="application/json"
                         )
 
-def batchDownloadExample(request):
+def batchLocationsDownloadExample(request):
     file = open(os.path.join(os.path.dirname(__file__), 'static', 'timeSeries', 'examples', 'locations.xlsx'), 'rb')
     response = HttpResponse(content=file)
     response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     response['Content-Disposition'] = 'attachment; filename="AddFromExcelLocationsExample.xlsx"'
     return response
+
+def batchSeries(request):
+    context = {'LANG': request.LANGUAGE_CODE,
+               'LOCAL_JAVASCIPT': settings.LOCAL_JAVASCIPT,}
+    return render(request, 'timeSeries/batchSeries.html', context)
+
+def batchSeriesRegister(request):
+    currentUser = request.user
+    series = json.loads(request.POST.get('elements'))
+    
+    timeStepChoices = {v: k for k, v in dict(Series.TIME_STEP_PERIOD_CHOICES).items()}
+    
+    errors = []
+    warnings = []
+    success = []
+    for i0, l0 in enumerate(series):
+        data = {}
+        try:
+            data['introducedBy'] = User.objects.get(id=currentUser.id)
+            data['name'] = l0['Name']
+            data['location'] = Location.objects.get(name=l0['Location'])
+            data['provider'] = DataProvider.objects.get(name=l0['Provider'])
+            data['type'] = DataType.objects.get(name=l0['Type'])
+            if l0['Time step units']!=None:
+                data['timeStepUnits'] = timeStepChoices[l0['Time step units']]
+            if l0['Time step period']!=None:
+                data['timeStepPeriod'] = int(l0['Time step period'])
+            if l0['Observations']!=None:
+                data['observations'] = l0['Observations']
+            newSeries = Series(**data)
+            newSeries.save()
+            
+            success.append((i0, "Success"))
+        except Exception as ex:
+            if ex.args[0]==1062:
+                # duplicate entry
+                warnings.append((i0, ex.args[1]))
+            else:
+                errors.append((i0, str(ex)))
+    context = {'warnings': warnings,
+               'errors': errors,
+               'success': success,
+               }
+    return HttpResponse(
+                        json.dumps(context),
+                        content_type="application/json"
+                        )
+
+def batchSeriesDownloadExample(request):
+    file = open(os.path.join(os.path.dirname(__file__), 'static', 'timeSeries', 'examples', 'series.xlsx'), 'rb')
+    response = HttpResponse(content=file)
+    response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response['Content-Disposition'] = 'attachment; filename="AddFromExcelSeriesExample.xlsx"'
+    return response
+

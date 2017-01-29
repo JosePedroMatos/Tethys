@@ -22,6 +22,10 @@ urlpatterns = [
     
     url(r'^admin/location/addBatch/$', views.batchLocations, name='batchLocations'),
     url(r'^admin/location/addBatch/registerBatch/$', views.batchLocationsRegister, name='batchLocationsRegister'),
-    url(r'^admin/location/example/$', views.batchDownloadExample, name='batchDownloadExample'),
+    url(r'^admin/location/example/$', views.batchLocationsDownloadExample, name='batchLocationsDownloadExample'),
+    
+    url(r'^admin/series/addBatch/$', views.batchSeries, name='batchSeries'),
+    url(r'^admin/series/addBatch/registerBatch/$', views.batchSeriesRegister, name='batchSeriesRegister'),
+    url(r'^admin/series/example/$', views.batchSeriesDownloadExample, name='batchSeriesDownloadExample'),
 ]
 
