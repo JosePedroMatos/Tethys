@@ -15,6 +15,7 @@ from djcelery.models import PeriodicTask, IntervalSchedule
 from gpu.manager import Manager, getResampledTime, getDateList, fGenerateLeads, fSecond, fMinute, fHour, fDay, fWeek, fMonth, fYear
 from . import satelliteData #@UnusedImport
 from django.core.exceptions import ObjectDoesNotExist
+from django_countries import countries
 
 import binascii
 import json
@@ -1008,3 +1009,63 @@ def aggregateSatelliteData(satelliteObj, satelliteInstance):
             toInput = []
     Value.objects.bulk_create(toInput)
     
+    
+    
+    
+    
+    
+    
+    
+def batchLocations(request):
+    context = {'LANG': request.LANGUAGE_CODE,
+               'LOCAL_JAVASCIPT': settings.LOCAL_JAVASCIPT,}
+    return render(request, 'timeSeries/batchLocations.html', context)
+
+def batchLocationsRegister(request):
+    currentUser = request.user
+    locations = json.loads(request.POST.get('elements'))
+    tmpCountries = {v: k for k, v in dict(countries).items()}
+    
+    errors = []
+    warnings = []
+    success = []
+    for i0, l0 in enumerate(locations):
+        data = {}
+        try:
+            data['introducedBy'] = User.objects.get(id=currentUser.id)
+            data['name'] = l0['Name']
+            data['lat'] = float(l0['Latitude'])
+            data['lon'] = float(l0['Longitude'])
+            if l0['Catchment']!=None:
+                data['catchment'] = l0['Catchment']
+            if l0['River']!=None:
+                data['river'] = l0['River']
+            if l0['Country']!=None:
+                data['country'] = tmpCountries[l0['Country']]
+            if l0['Observations']!=None:
+                data['observations'] = l0['Observations']
+            newLocation = Location(**data)
+            newLocation.save()
+            
+            success.append((i0, "Success"))
+        except Exception as ex:
+            if ex.args[0]==1062:
+                # duplicate entry
+                warnings.append((i0, ex.args[1]))
+            else:
+                errors.append((i0, str(ex)))
+    context = {'warnings': warnings,
+               'errors': errors,
+               'success': success,
+               }
+    return HttpResponse(
+                        json.dumps(context),
+                        content_type="application/json"
+                        )
+
+def batchDownloadExample(request):
+    file = open(os.path.join(os.path.dirname(__file__), 'static', 'timeSeries', 'examples', 'locations.xlsx'), 'rb')
+    response = HttpResponse(content=file)
+    response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response['Content-Disposition'] = 'attachment; filename="AddFromExcelLocationsExample.xlsx"'
+    return response

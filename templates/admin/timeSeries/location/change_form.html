@@ -1,0 +1,45 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls admin_static admin_modify %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script>(function($){jQuery = $.noConflict(true);})(django.jQuery);</script>
+{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/magnific-popup.css' %}" />
+    <style>
+        .mfp-content {
+            height:90%;
+ 		}
+ 		#batchUpload {
+ 			margin: 0 8px 0 0;
+			background: #417690;
+			text-transform: uppercase;
+			font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+			font-weight: normal;
+			font-size: 13px;
+		}
+    </style>
+{% endblock %}
+
+
+{% block admin_change_form_document_ready %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% static 'admin/scripts/jquery.magnific-popup.js' %}"></script>
+    <script type="text/javascript">
+        (function($) {
+        	$(document).ready(function() {
+        		if (!$('#id_name').val()) {
+	        		$('.submit-row').find('.default').after('<p class="deletelink-box"><a id="batchUpload" href="/timeSeries/admin/location/addBatch/" class="deletelink">Add from Excel</a></p');
+	        		
+	                $('#batchUpload').magnificPopup({
+	                    fixedBgPos: true,
+	                    type: 'iframe',
+	                    });
+        		}
+            });
+        })(django.jQuery);
+    </script>
+{% endblock %}

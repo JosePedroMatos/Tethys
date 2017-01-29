@@ -19,5 +19,9 @@ urlpatterns = [
     url(r'^satelliteUpdate/(?P<name>.+)/$', views.updateSatelliteData, name='updateSatellite'),
     url(r'^satelliteGet/$', views.getSatelliteData, name='getSatellite'),
     url(r'^getValues/$', views.getValues, name='getValues'),
+    
+    url(r'^admin/location/addBatch/$', views.batchLocations, name='batchLocations'),
+    url(r'^admin/location/addBatch/registerBatch/$', views.batchLocationsRegister, name='batchLocationsRegister'),
+    url(r'^admin/location/example/$', views.batchDownloadExample, name='batchDownloadExample'),
 ]
 

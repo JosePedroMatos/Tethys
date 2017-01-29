@@ -1,0 +1,308 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Tethys: Water Resources Database Series Upload</title>
+		<link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+		
+		{{ LOCAL_JAVASCIPT|safe }}
+        
+        <script src="{% static 'timeSeries/scripts/ajax.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/xlsx.core.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'timeSeries/scripts/datatables.min.js' %}"></script>
+        
+        <!-- <link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" /> -->
+		<link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}" />
+    	<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/datatables.min.css' %}"/>
+		
+	<style>
+	.loader {
+		height: 80px;
+		background-image: url("{% static 'main/images/loader.gif' %}");
+		background-repeat: no-repeat;
+		background-position: center center;
+	}
+	
+	#download {
+		background: #79aec8;
+		font-size: 13px;
+	}
+	
+	#deleteP {
+		float: right;
+	}
+	
+	.warning {
+		background: aqua;
+	}
+	
+	.error {
+		background: red;
+	}
+	</style>
+	
+	</head>
+	<body>
+		<div>
+    		<div id="header">
+        		<div id="branding">
+					<h1 id="site-name">Tethys administration</h1>
+        		</div>
+    	    </div>
+		</div>
+		
+		<div class="breadcrumbs">
+			Add multiple locations from an Excel spreadsheet
+		</div>
+		
+		<div id="content" class="colM">
+			<div id="content-main">
+				<fieldset class="module aligned ">
+					<h2>1. Import</h2>
+					<div class="description">Import the Excel file with the location information.</div>
+					<input value="Browse..." name="_upload" type="file" id="choose">
+				</fieldset>
+				
+				<fieldset class="module aligned" id="validate">
+					<h2>2. Validate and upload</h2>
+					<div class="description">Process and validate the data, then proceed with the upload. May take some time. Please be patient.</div>
+					<div id="excelLoader" class="loader"></div>
+					<div id="dataTableWrapper"></div>
+				</fieldset>
+				
+				<div class="submit-row">
+					<form onsubmit="return submit();" method="post" id='upload'>
+			    		{% csrf_token %}
+			    		<input value="Save new locations" class="default" name="_save" type="submit" id="uploadPostButton">
+					</form>
+					<p class="deletelink-box" id="upload"><a id="download" href="/timeSeries/admin/location/example/" class="deletelink">Download example</a></p>
+				    </div>
+			</div>
+		</div>
+		
+		<script>
+			// prepare page
+			$(document).ready(function() {
+				$('#download').parent().css("float","right")
+				
+				$('#validate').hide();
+				$('#upload').hide();
+				
+				//$('#"errors"').hide();
+				//$('#"warnings"').hide();
+				//$('.loader').hide();
+				
+			})
+			
+			// Object prototype
+			function Location(name, lat, lon, catchment, river, country, observations) {
+				this.Name = name;
+			    this.Latitude = lat;
+			    this.Longitude = lon;
+			    this.Catchment = catchment;
+			    this.River = river;
+			    this.Country = country;
+			    this.Observations = observations;
+			    
+			    this.Status = '';
+			}
+			
+			var dataToUpload;			
+			function handleExcelFile(e) {
+		  		//$('#excelLoader').show();
+		  		//$('#errors').hide();
+		  		//$('#warnings').hide();
+		  		
+		  		dataToUpload = [];
+				setTimeout(
+						function() {
+							var files = e.target.files;
+							var reader = new FileReader();
+							//var name = files[0].name;
+							reader.onload = function(e) {
+								$('#validate').show();
+								$('#excelLoader').show();
+								$('#dataTableWrapper').hide();
+								
+								var data = e.target.result;
+
+								var workbook = XLSX.read(data, {
+									type : 'binary'
+								});
+								var sheetNameList = workbook.SheetNames;
+								var worksheet = workbook.Sheets[sheetNameList[0]];
+								console.log(worksheet);
+								var cellref;
+								var header = true;
+								var tmpName = null;
+								var tmpLat = null;
+								var tmpLon = null;
+								var tmpCatchment = null;
+								var tmpRiver = null;
+								var tmpCountry = null;
+								var tmpObservations = null;
+								for (cellref in worksheet) {
+									
+									if (cellref[0] != '!') {
+											if (cellref.toString() === 'A2' || !header) {
+												header = false;
+												if (cellref.toString().indexOf('A') === 0) {
+													if (cellref.toString() != 'A2') {
+														dataToUpload.push(new Location(
+																tmpName, tmpLat,
+																tmpLon, tmpCatchment,
+																tmpRiver, tmpCountry,
+																tmpObservations));
+														
+														tmpName = null;
+														tmpLat = null;
+														tmpLon = null;
+														tmpCatchment = null;
+														tmpRiver = null;
+														tmpCountry = null;
+														tmpObservations = null;
+													}
+													tmpName = worksheet[cellref].v;
+												}
+												if (cellref.toString().indexOf('B') === 0) {
+													tmpLat = parseFloat(worksheet[cellref].v);
+												}
+												if (cellref.toString().indexOf('C') === 0) {
+													tmpLon = parseFloat(worksheet[cellref].v);
+												}
+												if (cellref.toString().indexOf('D') === 0) {
+													tmpCatchment = worksheet[cellref].v;
+												}
+												if (cellref.toString().indexOf('E') === 0) {
+													tmpRiver = worksheet[cellref].v;
+												}
+												if (cellref.toString().indexOf('F') === 0) {
+													tmpCountry = worksheet[cellref].v;
+												}
+												if (cellref.toString().indexOf('G') === 0) {
+													var tmpObservations = worksheet[cellref].v;
+												}
+											}
+										}
+									}
+									if (tmpName!=null) {
+										dataToUpload.push(new Location(
+												tmpName, tmpLat,
+												tmpLon, tmpCatchment,
+												tmpRiver, tmpCountry,
+												tmpObservations));
+									}
+								};
+								reader.onloadend = function() {
+									createTable(dataToUpload);
+								};
+								
+								reader.readAsBinaryString(files[0]);
+						}, 0);
+			}
+			
+			function createTable(tableData) {
+				console.log(tableData);
+				$('#dataTableWrapper').html('');
+				var table = document.createElement('table');
+				var tableHead = document.createElement('thead');
+				var properties = Object.getOwnPropertyNames(new Location());
+				var header = document.createElement('tr');
+				properties.forEach(
+						function(property) {
+							var cell = document.createElement('th');
+							cell.appendChild(document.createTextNode(property));
+							header.appendChild(cell);
+						});
+				tableHead.appendChild(header);
+				table.appendChild(tableHead);
+				
+				var tableBody = document.createElement('tbody');
+				tableData.forEach(
+						function(rowData) {
+							var row = document.createElement('tr');
+							properties.forEach(
+									function(property) {
+										var cell = document.createElement('td');
+										if (rowData[property] === null) {
+											cell.appendChild(document.createTextNode(''));
+										} else {
+											cell.appendChild(document.createTextNode(rowData[property]));
+										}
+										row.appendChild(cell);
+									});
+							tableBody.appendChild(row);
+						});
+				table.appendChild(tableBody);
+				
+				$('#dataTableWrapper').html(table);
+				$('#dataTableWrapper').find('table').DataTable({
+					"createdRow": function(row, data, dataIndex) {
+						if (data[data.length-1].indexOf('!Warning: ') === 0) {
+							$(row).css('background', '#ffefb4');
+						} else if (data[data.length-1] != 'Success' && data[data.length-1] != '') {
+							$(row).css('background', '#ffbfb4');
+						}
+					},
+					"order": [[ properties.length-1, "asc" ]],
+				});
+				$('#dataTableWrapper').find('input').css('float', 'right');
+				
+				$('#excelLoader').hide();
+				$('#dataTableWrapper').show();
+				$('#upload').show();
+			}
+
+			$('#choose').get()[0].addEventListener('change', handleExcelFile, false);
+		</script>
+		
+		<script>
+			// encrypt and upload data
+			$('#uploadPostButton').on('click', function(event){
+				event.preventDefault();
+				
+				$('#excelLoader').show();
+				$('#dataTableWrapper').hide();
+				$('#upload').show();
+				
+				// send data
+				$.ajax({
+					url : "registerBatch/",
+					type : "POST",
+					data : {
+						elements: JSON.stringify(dataToUpload),
+					},
+			
+					// handle a successful response
+					success : function(json) {
+						var success = json.success;
+						var warnings = json.warnings;
+						var errors = json.errors;
+						
+						for (var i0=0; i0<success.length; i0++) {
+							dataToUpload[success[i0][0]].Status = success[i0][1];
+						}
+						for (var i0=0; i0<warnings.length; i0++) {
+							dataToUpload[warnings[i0][0]].Status = '!Warning: duplicate entry';
+						}
+						for (var i0=0; i0<errors.length; i0++) {
+							dataToUpload[errors[i0][0]].Status = '!Error: ' + errors[i0][1];
+						}
+						
+						createTable(dataToUpload);
+					},
+		
+					// handle a non-successful response
+					error : function(xhr,errmsg,err) {
+						console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+						$('#excelLoader').hide();
+					}
+				});
+			});
+		</script>
+	</body>
+</html>

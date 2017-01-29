@@ -84,7 +84,7 @@ class DataProvider(models.Model):
 class Location(models.Model):
     # Table for storing measurement locations
     
-    name = models.CharField(max_length=256, null=False, blank=False)
+    name = models.CharField(max_length=255, null=False, blank=False, unique=True)
     lat = models.DecimalField(decimal_places=10, max_digits=15, null=False, blank=False)
     lon = models.DecimalField(decimal_places=10, max_digits=15, null=False, blank=False)
     catchment = models.CharField(max_length=256, null=False, blank=True)
