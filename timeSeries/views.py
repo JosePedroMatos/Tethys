@@ -226,8 +226,13 @@ def getValues(request):
     context = {}
     if request.method == 'POST':
         s0 = Series.objects.get(name=request.POST.get('series'))
-        dateFrom = dt.datetime.strptime(request.POST.get('from'), "%a, %d %b %Y %H:%M:%S %Z").replace(tzinfo = None)
-        dateTo = dt.datetime.strptime(request.POST.get('to'), "%a, %d %b %Y %H:%M:%S %Z").replace(tzinfo = None)
+        #=======================================================================
+        # dateFrom = dt.datetime.strptime(request.POST.get('from').split(',')[1][1:], "%d %b %Y %H:%M:%S %Z").replace(tzinfo = None)
+        # dateTo = dt.datetime.strptime(request.POST.get('to').split(',')[1][1:], "%d %b %Y %H:%M:%S %Z").replace(tzinfo = None)
+        #=======================================================================
+        dateFrom = dateutil.parser.parse(request.POST.get('from')).replace(tzinfo = None)
+        dateTo = dateutil.parser.parse(request.POST.get('to')).replace(tzinfo = None)
+        
         result = Value.objects.filter(series=s0, date__gte=dateFrom, date__lt=dateTo).order_by('date')
         if not result:
             tmp = Value.objects.filter(series=s0, date__lt=dateFrom)
@@ -496,7 +501,10 @@ def forecast(request, forecastName):
     errorMsg = ''
     forecast = Forecast.objects.filter(name=forecastName)
     if forecast:
-        tmp = dt.datetime.strptime(request.POST.get('reference'), "%a, %d %b %Y %H:%M:%S %Z").replace(tzinfo = None)
+        #=======================================================================
+        # tmp = dt.datetime.strptime(request.POST.get('reference').split(',')[1][1:], "%d %b %Y %H:%M:%S %Z").replace(tzinfo = None)
+        #=======================================================================
+        tmp = dateutil.parser.parse(request.POST.get('reference')).replace(tzinfo = None)
         
         try:
             larger = Value.objects.filter(series=forecast[0].targetSeries.id).filter(date__gte=tmp).earliest('date').date
@@ -664,9 +672,13 @@ def hindcast(request, forecastName):
             lead = forecast[0].leadTime
         else:
             lead = float(request.POST['lead'])
-        dateFrom = dt.datetime.strptime(request.POST.get('from'), "%a, %d %b %Y %H:%M:%S %Z").replace(tzinfo = None)
-        dateTo = dt.datetime.strptime(request.POST.get('to'), "%a, %d %b %Y %H:%M:%S %Z").replace(tzinfo = None)
-            
+        #=======================================================================
+        # dateFrom = dt.datetime.strptime(request.POST.get('from').split(',')[1][1:], "%d %b %Y %H:%M:%S %Z").replace(tzinfo = None)
+        # dateTo = dt.datetime.strptime(request.POST.get('to').split(',')[1][1:], "%d %b %Y %H:%M:%S %Z").replace(tzinfo = None)
+        #=======================================================================
+        dateFrom = dateutil.parser.parse(request.POST.get('from')).replace(tzinfo = None)
+        dateTo = dateutil.parser.parse(request.POST.get('to')).replace(tzinfo = None)
+        
         fJumpFun = fJumpDateFun(forecast[0].period)
         dateFromExtended = fJumpFun(dateFrom, -2)   
         target, extra = fGetForecastData(forecastName, fromDate=dateFromExtended, toDate=dateTo)
@@ -1124,3 +1136,7 @@ def batchSeriesDownloadExample(request):
     response['Content-Disposition'] = 'attachment; filename="AddFromExcelSeriesExample.xlsx"'
     return response
 
+def batchValues(request):
+    context = {'LANG': request.LANGUAGE_CODE,
+               'LOCAL_JAVASCIPT': settings.LOCAL_JAVASCIPT,}
+    return render(request, 'timeSeries/batchValues.html', context)
