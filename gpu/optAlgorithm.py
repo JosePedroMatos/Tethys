@@ -11,14 +11,10 @@ import warnings
 import mpld3
 from .domination import convexSorting
 from .crowding import phenCrowdingNSGAII
-from scipy.interpolate import interp1d
 from multiprocessing import Process, Queue
 from celery import current_task
 from timeSeries.models import Forecast
 from gpu.functions import predictiveQQ, processBands, metrics, plot
-#===============================================================================
-# from .crowding import *
-#===============================================================================
 
 class OptAlgorithm(object):
     '''
@@ -28,7 +24,7 @@ class OptAlgorithm(object):
     def __init__(self, data, targets, nVars, evalFun, errorObj, population=1000, epochs=100,
                  bands=[0.001, 0.01, 0.025, 0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95, 0.975, 0.99, 0.999],
                  bandWidth=0.025, minModels=5, displayEach=10, taskInfo={'message': ''}, transformWeights=False, debug=False,
-                 forceNonExceedance=0, **kwargs):
+                 forceNonExceedance=0, multiQQ=1, normalization=None, **kwargs):
         self.trained = False
 
         # handling of key arguments
@@ -47,6 +43,8 @@ class OptAlgorithm(object):
         self.opt['transformWeights'] = transformWeights
         self.opt['debug'] = debug
         self.opt['forceNonExceedance'] = forceNonExceedance
+        self.opt['multiQQ'] = multiQQ
+        self.opt['normalization'] = normalization
         self.timing = {}
         self.normalize = {}
         self.taskInfo = taskInfo
@@ -78,24 +76,45 @@ class OptAlgorithm(object):
     
     def __establishBandBounds__(self):
         # establish bounds
-        # TODO: Bounds are not correct. Review!!!
         bounds = np.zeros((2, len(self.opt['bands'])))
-        for i0 in range(0, len(self.opt['bands'])):
-            if i0>0:
-                bounds[0,i0] = max((bounds[1,i0-1],
-                                    (self.opt['bands'][i0]+self.opt['bands'][i0-1])/2,
-                                    self.opt['bands'][i0]-self.opt['bandWidth']))
+        widths = np.zeros_like(self.opt['bands'])
+        for i0 in range(0, int(len(self.opt['bands'])/2)):
+            if i0==0:
+                widths[i0] = min((self.opt['bandWidth'], self.opt['bands'][0]))
             else:
-                bounds[0,i0] = max((0,
-                                    self.opt['bands'][i0]-self.opt['bandWidth']))
-            
-            if i0<len(self.opt['bands'])-1:
-                bounds[1,i0] = min(((self.opt['bands'][i0+1]+self.opt['bands'][i0])/2,
-                                    self.opt['bands'][i0]+self.opt['bandWidth'],
-                                    2*self.opt['bands'][i0]))
+                widths[i0] = min((self.opt['bandWidth'], self.opt['bands'][i0]-self.opt['bands'][i0-1]))
+        for tmpI0 in range(0, int(len(self.opt['bands'])/2)):
+            i0 = len(self.opt['bands'])-1-tmpI0
+            if i0==len(self.opt['bands'])-1:
+                widths[i0] = min((self.opt['bandWidth'], 1-self.opt['bands'][i0]))
             else:
-                bounds[1,i0] = min((1,
-                                    self.opt['bands'][i0]+self.opt['bandWidth']))
+                widths[i0] = min((self.opt['bandWidth'], self.opt['bands'][i0+1]-self.opt['bands'][i0]))    
+        
+        # correct widths by removing overlaps
+        for i0 in range(int(len(self.opt['bands'])/2), 0, -1):
+            x = self.opt['bands'][i0-1]+widths[i0-1]-(self.opt['bands'][i0]-widths[i0])
+            if x>0:
+                if widths[i0]>x:
+                    widths[i0] -= x
+                else:
+                    fx = 1-x/(widths[i0-1]+widths[i0])
+                    widths[i0] *= fx
+                    widths[i0-1] *= fx
+        for i0 in range(int(len(self.opt['bands'])/2), len(self.opt['bands'])-1):
+            x = self.opt['bands'][i0]+widths[i0]-(self.opt['bands'][i0+1]-widths[i0+1])
+            if x>0:
+                if widths[i0]>x:
+                    widths[i0] -= x
+                else:
+                    fx = 1-x/(widths[i0]+widths[i0+1])
+                    widths[i0] *= fx
+                    widths[i0+1] *= fx
+        
+        
+        # save
+        bounds[0,] = self.opt['bands']-widths
+        bounds[1,] = self.opt['bands']+widths
+
         return bounds
     
     def predict(self, data=None, bands=None):
@@ -120,45 +139,19 @@ class OptAlgorithm(object):
             tmpValidNE = np.where(np.logical_and(self.fit[:,0]>=self.bandBounds[0,i0], self.fit[:,0]<=self.bandBounds[1,i0]))[0] 
             
             if len(tmpValidNE)>self.opt['minModels']:
-                tmpValidEr = self.fit[tmpValidNE,1]
-                sortIdxs = np.argsort(tmpValidEr)
-                threshIdxs = np.where(tmpValidEr<=(np.median(tmpValidEr)+np.min(tmpValidEr))/2)[0]
-                if len(threshIdxs)<self.opt['minModels']:
-                    idxs = sortIdxs[:self.opt['minModels']]
-                else:
-                    idxs = threshIdxs
-                averaged[:,i0] = np.mean(simulations[:,tmpValidNE[idxs]], axis=1)
+                averaged[:,i0] = np.mean(simulations[:,tmpValidNE], axis=1)
+                #===============================================================
+                # tmpValidEr = self.fit[tmpValidNE,1]
+                # sortIdxs = np.argsort(tmpValidEr)
+                # threshIdxs = np.where(tmpValidEr<=(np.median(tmpValidEr)+np.min(tmpValidEr))/2)[0]
+                # if len(threshIdxs)<self.opt['minModels']:
+                #     idxs = sortIdxs[:self.opt['minModels']]
+                # else:
+                #     idxs = threshIdxs
+                # averaged[:,i0] = np.mean(simulations[:,tmpValidNE[idxs]], axis=1)
+                #===============================================================
         return averaged
-    
-    #===========================================================================
-    # def processBands(self, simulations):
-    #     bands = np.array(self.opt['bands'])
-    #     
-    #     for i0 in range(simulations.shape[0]):
-    #         tmpBase = simulations[i0,:]
-    #         tmp = ~np.isnan(tmpBase)
-    #         tmpBase[tmp] = np.sort(tmpBase[tmp])
-    #         if np.sum(tmp)>=2:
-    #             tmp = tmpBase[-1]
-    #             for i1 in range(len(tmpBase)-2, 0, -1):
-    #                 if np.isnan(tmp):
-    #                     tmp = tmpBase[i1]
-    #                 else:
-    #                     if ~np.isnan(tmpBase[i1]):
-    #                         if np.round(tmp,6)<=np.round(tmpBase[i1],6):
-    #                             tmpBase[i1] = np.nan
-    #                         else:
-    #                             tmp = tmpBase[i1]
-    #             tmp = ~np.isnan(tmpBase)
-    #             if np.sum(tmp)>1:
-    #                 simulations[i0,:] = np.interp(bands, bands[tmp], tmpBase[tmp])
-    #             else:
-    #                 simulations[i0,:] = np.nan
-    #         else:
-    #             simulations[i0,:] = np.nan
-    #     return simulations
-    #===========================================================================
-    
+   
     def start(self):
         if not self.trained:
             self.__initPopulation__()
@@ -169,14 +162,21 @@ class OptAlgorithm(object):
         # QQ plot
         bands = processBands(self.predict(), self.opt['bands'])
         uniform, pValues = predictiveQQ(bands, self.targets, self.opt['bands'])
-        
+        mUniform = []
+        mPValues = []
+        for i0 in range(self.opt['multiQQ']):
+            tmp = range(int(np.floor(i0/self.opt['multiQQ']*self.trainData.shape[0])), int(np.floor((i0+1)/self.opt['multiQQ']*self.trainData.shape[0])))
+            tmp0, tmp1 = predictiveQQ(bands[tmp,:], self.targets[tmp], self.opt['bands'])
+            mUniform.append(tmp0)
+            mPValues.append(tmp1)
+            
         # Performance
-        alpha, xi, piRel = metrics(uniform, pValues, bands, self.bandBounds)
+        alpha, xi, pi = metrics(uniform, pValues, bands, self.bandBounds)
         
         # Update Tethys
         tmpMessages = []
         tmpMessages.append('&nbsp&nbsp&nbsp&nbsp&nbsp&nbspEpoch %05u: ' % (0))
-        tmpMessages.append('&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspmetrics: &#945:%f, &#958:%f, &#960:%f' % (alpha, xi, piRel))
+        tmpMessages.append('&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspmetrics: &#945:%f, &#958:%f, &#960:%f' % (alpha, xi, pi))
         self._updateInfo(state='PROGRESS', message=tmpMessages, plot=self._plotD3(uniform, pValues, bands))
         
         if self.opt['debug']:
@@ -184,7 +184,7 @@ class OptAlgorithm(object):
             p = Process(target=plot, args=(plotQueue,))
             p.start()
             self.rejected = []
-            self._plotWrapper(plotQueue, bands, uniform, pValues)
+            self._plotWrapper(plotQueue, bands, uniform, pValues, alpha, xi, pi, 0, mUniform, mPValues)
     
         # Compute
         for i0 in range(self.opt['epochs']):
@@ -203,9 +203,16 @@ class OptAlgorithm(object):
                 # QQ plot
                 bands = processBands(self.predict(), self.opt['bands'])
                 uniform, pValues = predictiveQQ(bands, self.targets, self.opt['bands'])
+                mUniform = []
+                mPValues = []
+                for i1 in range(self.opt['multiQQ']):
+                    tmp = range(int(np.floor(i1/self.opt['multiQQ']*self.trainData.shape[0])), int(np.floor((i1+1)/self.opt['multiQQ']*self.trainData.shape[0])))
+                    tmp0, tmp1 = predictiveQQ(bands[tmp,:], self.targets[tmp], self.opt['bands'])
+                    mUniform.append(tmp0)
+                    mPValues.append(tmp1)
                 
                 # Performance
-                alpha, xi, piRel = metrics(uniform, pValues, bands, self.bandBounds)
+                alpha, xi, pi = metrics(uniform, pValues, bands, self.bandBounds)
                 
                 # Output times
                 tmpKeys=sorted(self.timing.keys())
@@ -224,15 +231,15 @@ class OptAlgorithm(object):
                 print('Epoch %5u: ' % (i0) + tmpToPrint[:-2])
                 tmpMessages.append('&nbsp&nbsp&nbsp&nbsp&nbsp&nbspEpoch %05u: ' % (i0+1) + tmpToPrint[:-2])
                 
-                print('    metrics: alpha:%f, xi:%f, pi:%f' % (alpha, xi, piRel))
-                tmpMessages.append('&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspmetrics: &#945:%f, &#958:%f, &#960:%f' % (alpha, xi, piRel))
+                print('    metrics: alpha:%f, xi:%f, pi:%f' % (alpha, xi, pi))
+                tmpMessages.append('&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspmetrics: &#945:%f, &#958:%f, &#960:%f' % (alpha, xi, pi))
                 
                 # Update Tethys
                 self._updateInfo(state='PROGRESS', message=tmpMessages, plot=self._plotD3(uniform, pValues, bands))
                 
                 # Debug plot
                 if self.opt['debug']:
-                    self._plotWrapper(plotQueue, bands, uniform, pValues)
+                    self._plotWrapper(plotQueue, bands, uniform, pValues, alpha, xi, pi, i0, mUniform, mPValues)
                 
         self.trained = True
         if self.opt['debug']:
@@ -253,21 +260,32 @@ class OptAlgorithm(object):
             
         return result    
     
-    def _plotWrapper(self, queue, bands, uniform, pValues):
-        tmpBest=np.argmin(self.fit[:,1])
+    def _plotWrapper(self, queue, bands, uniform, pValues, alpha, xi, pi, epoch, mUniform, mPValues):
+        tmpBest = np.argmin(self.fit[:,1])
         best = self.simulations[:, tmpBest]
         
-        data={'fig': self.fig, 
-              'plotAx': self.plotAx,
-              'targets': self.targets,
-              'best': best,
-              'bands': bands,
-              'fit': self.fit,
-              'frontLvls': self.frontLvls,
-              'uniform': uniform,
-              'pValues': pValues,
-              'rejected': self.rejected,
-              }
+        tmp = np.array(self.getBands())
+        tmp = 1-2*tmp[0:int(tmp.shape[0]/2)]
+        
+        data = {'fig': self.fig, 
+                'plotAx': self.plotAx,
+                'targets': self.targets,
+                'best': best,
+                'bands': bands,
+                'fit': self.fit,
+                'frontLvls': self.frontLvls,
+                'uniform': uniform,
+                'pValues': pValues,
+                'rejected': self.rejected,
+                'alpha': alpha,
+                'xi': xi,
+                'pi': pi,
+                'epoch': epoch,
+                'mUniform': mUniform,
+                'mPValues': mPValues,
+                'normalization': self.opt['normalization'],
+                'bandSize': tmp[::-1],
+                }
 
         queue.put(data)
     
@@ -423,44 +441,6 @@ class OptAlgorithm(object):
     def __crowding__(self, simulations, fit, frontLvls):
         '''Phenotype crowding based on correlations with neighboring series [1 - high crowding; 0 - low crowding]'''
         
-        #=======================================================================
-        # # correl crowding
-        # start=time.time()
-        #     # order simulations by non-exceedance
-        # tmpOrder=np.argsort(fit[:,0])
-        # tmpOrderedSim=simulations[:,tmpOrder]
-        # 
-        # if 'crowding' in self.opt:
-        #     # using openCL
-        #     tmpError=tmpOrderedSim.T-np.tile(self.targets[np.newaxis], (tmpOrderedSim.shape[1], 1))
-        #     tmpError=tmpError[:, np.random.choice(tmpError.shape[1], tmpError.shape[1]*self.opt['crowdingFraction'], replace=False)]
-        #     
-        #     self.opt['crowding'].reshapeData(tmpError)
-        #     
-        #     crowdDist=0.5*self.opt['crowding'].compute(tmpError, round(self.opt['crowdingWindow']*tmpError.shape[0]))
-        # else:
-        #     # using python
-        #     tmpError=tmpOrderedSim-np.tile(self.targets[np.newaxis].T, (1, tmpOrderedSim.shape[1]))
-        #     
-        #     # compute distances
-        #     crowdDist=np.zeros((tmpOrderedSim.shape[1], tmpOrderedSim.shape[1]))
-        #     for i0 in range(crowdDist.shape[0]):
-        #         for i1 in range(i0+1, min(crowdDist.shape[1], i0+round(self.opt['crowdingWindow']*crowdDist.shape[1]))):
-        #             crowdDist[i0, i1]=0.5*(1+np.corrcoef(tmpError[:, i0],tmpError[:, i1])[0,1])
-        #         crowdDist[i0, min(crowdDist.shape[1], i0+round(self.opt['crowdingWindow']*crowdDist.shape[1])):]=1
-        #     crowdDist+=crowdDist.T
-        #     crowdDist+=np.diag(np.ones_like(tmpOrder))
-        #     
-        #     # search for minima
-        # crowdDist=np.amin(crowdDist, 1)
-        # 
-        #     # put crowding distances by the original order 
-        # correlCrowd=np.zeros_like(crowdDist)
-        # correlCrowd[tmpOrder]=crowdDist
-        # 
-        # self.timing['crowdingCorrel']=(time.time()-start)
-        #=======================================================================
-        
         # crowding NSGAII
         start=time.time()
         phenotype=phenCrowdingNSGAII(fit[:,0], fit[:,1], fronts=frontLvls)
@@ -473,9 +453,9 @@ class OptAlgorithm(object):
         if ('forceNonExceedance' in self.opt):
             tmpMin=fit[np.argmin(fit[:,1]), 0]
             tmpDiff=np.abs(fit[:, 0]-tmpMin)
-            fronts=convexSorting(fit[:,0], fit[:,1]+self.opt['forceNonExceedance']*tmpDiff)[0]
+            fronts=convexSorting(fit[:,0], fit[:,1]+self.opt['forceNonExceedance']*tmpDiff)
         else:
-            fronts=convexSorting(fit[:,0], fit[:,1])[0]
+            fronts=convexSorting(fit[:,0], fit[:,1])
             
         frontLvl=self.opt['population']*np.ones((fit.shape[0],))
         for i0 in range(len(fronts)):
@@ -535,66 +515,6 @@ class OptAlgorithm(object):
         self.trained = True
         self.population = population
         
-    #===========================================================================
-    # def predictiveQQ(self, simulations, targets=None):
-    #     with warnings.catch_warnings():
-    #         warnings.simplefilter("ignore")
-    #         if targets==None:
-    #             targets = self.targets
-    #     bands = self.__toCustomLogSpace__(np.array(self.opt['bands'])[::-1])
-    #     pValues = np.empty_like(targets)
-    #     for i0 in range(pValues.shape[0]):
-    #         sims, idxs = np.unique(simulations[i0,:],return_index=True)
-    #         try:
-    #             pValues[i0] = interp1d(sims, bands[idxs], kind='linear', assume_sorted=True)(targets[i0])
-    #         except np.linalg.linalg.LinAlgError as ex:
-    #             pValues[i0] = np.nan
-    #         except ValueError as ex:
-    #             # TODO: handle better extrapolations
-    #             if targets[i0]<sims[0]:
-    #                 pValues[i0] = bands[0]+(bands[0]-bands[1])/(sims[0]-sims[1])*(targets[i0]-sims[0])
-    #             else:
-    #                 pValues[i0] = bands[-1]+(bands[-1]-bands[-2])/(sims[-1]-sims[-2])*(targets[i0]-sims[-1])
-    #     pValues = self.__fromCustomLogSpace__(pValues)
-    #     pValues[pValues<0] = 0
-    #     pValues[pValues>1] = 1
-    #     
-    #     pValues = np.sort(pValues[np.logical_not(np.isnan(pValues))])
-    #     return (np.linspace(0,1, pValues.shape[0]), pValues)
-    # 
-    # def __toCustomLogSpace__(self, x):
-    #     y = np.empty_like(x)
-    #     tmp = x<0.5
-    #     y[tmp] = np.log(x[tmp])-np.log(0.5)
-    #     tmp = np.logical_not(tmp)
-    #     y[tmp] = -np.log(1-x[tmp])+np.log(0.5)
-    #     return y
-    #     
-    # def __fromCustomLogSpace__(self, y):
-    #     x = np.empty_like(y)
-    #     tmp = y<0
-    #     x[tmp] = np.exp(y[tmp]+np.log(0.5))
-    #     tmp = np.logical_not(tmp)
-    #     x[tmp] = 1-np.exp(-y[tmp]+np.log(0.5))
-    #     return x
-    #===========================================================================
-    
-    #===========================================================================
-    # def metrics(self, uniform, pValues, simulations):
-    #     # alpha
-    #     alpha = 1-2*np.mean(np.abs(pValues-uniform));
-    #     # xi
-    #     xi = np.zeros_like(pValues)
-    #     xi[np.logical_or(pValues==1, pValues==0)] = 1
-    #     xi = 1-np.mean(xi)
-    #     # piRel
-    #     bandProb = self.bandBounds[1,:]-self.bandBounds[0,:]
-    #     expected = np.sum(simulations * np.tile(bandProb,(simulations.shape[0],1)), axis=1)
-    #     expected2 = np.sum(np.square(simulations) * np.tile(bandProb,(simulations.shape[0],1)), axis=1)
-    #     piRel = np.mean(np.abs(expected)/np.sqrt(expected2-np.square(expected)))
-    #     return (alpha, xi, piRel)
-    #===========================================================================
-    
     def _fWeights(self, pop):
         return np.power(pop/4,5)
         

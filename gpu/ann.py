@@ -31,7 +31,7 @@ class ann:
         self.openCL.platform=platform
         tmp={'ALL': cl.device_type.ALL, 'CPU': cl.device_type.CPU, 'GPU': cl.device_type.GPU}  # @UndefinedVariable
         self.openCL.type=tmp[deviceType]
-        self.activationFuns=(activationFunction, 'Linear')
+        self.activationFuns=(activationFunction, 'lin')
         self.verbose = verbose
         self.setWeights()
         self.lowerThreshold = lowerThreshold
