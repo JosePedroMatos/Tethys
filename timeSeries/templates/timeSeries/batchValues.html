@@ -1,0 +1,162 @@
+{% load i18n %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Tethys: Water Resources Database Time Series Upload</title>
+		<link rel="icon" type="image/png" href="{% static 'main/images/icon.png' %}" />
+		
+		{{ LOCAL_JAVASCIPT|safe }}
+        
+        <script src="{% static 'timeSeries/scripts/ajax.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/xlsx.core.min.js' %}"></script>
+        <!-- <script src="{% static 'timeSeries/scripts/datatables.min.js' %}"></script> -->
+        <script src="{% static 'timeSeries/scripts/batchValues.js' %}"></script>
+        
+        <script src="{% static 'timeSeries/scripts/d3.min.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/d3.layout.min.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/rickshaw.min.js' %}"></script>
+        
+        <script src="{% static 'timeSeries/scripts/plotChart.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/encryptData.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/decryptData.js' %}"></script>
+        
+        <link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}" />
+    	<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}" />
+		<!-- <link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/datatables.min.css' %}"/> -->
+		<link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/rickshaw.min.css' %}" />
+		
+	<style>
+	.loader {
+		height: 80px;
+		background-image: url("{% static 'main/images/loader.gif' %}");
+		background-repeat: no-repeat;
+		background-position: center center;
+	}
+	
+	#download {
+		background: #79aec8;
+		font-size: 13px;
+	}
+	
+	#deleteP {
+		float: right;
+	}
+	
+	.warning {
+		background: aqua;
+	}
+	
+	.error {
+		background: red;
+	}
+	</style>
+	
+	</head>
+	<body>
+		<div>
+    		<div id="header">
+        		<div id="branding">
+					<h1 id="site-name">Tethys administration</h1>
+        		</div>
+    	    </div>
+		</div>
+		
+		<div class="breadcrumbs">
+			Add multiple time series from an Excel spreadsheet
+		</div>
+		
+		<div id="content" class="colM">
+			<div id="content-main">
+				<fieldset class="module aligned ">
+					<h2>1. Import</h2>
+					<div class="description">Import the Excel file with the values.</div>
+					<input value="Browse..." name="_upload" type="file" id="choose">
+				</fieldset>
+				
+				<fieldset class="module aligned" id="validate">
+					<h2>2. Validate and upload</h2>
+					<div class="description">Process and validate the data, then proceed with the upload. May take some time. Please be patient.</div>
+					<!-- <div id="excelLoader" class="loader"></div>
+					<div id="dataTableWrapper"></div> -->
+					
+					<div id="chartLoader" class="loader"></div>
+					<div id="chart"></div> 
+					<div id="slider"></div>
+				</fieldset>
+				
+				<div class="submit-row">
+					<form onsubmit="return submit();" method="post" id='upload'>
+			    		{% csrf_token %}
+			    		<input value="Save new locations" class="default" name="_save" type="submit" id="uploadPostButton">
+					</form>
+					<p class="deletelink-box" id="upload"><a id="download" href="/timeSeries/admin/values/example/" class="deletelink">Download example</a></p>
+				    </div>
+			</div>
+		</div>
+		
+		<script>
+			// prepare page
+			$(document).ready(function() {
+				$('#download').parent().css("float","right")
+				
+				//$('#validate').hide();
+				//$('#upload').hide();				
+			})
+			
+			var dataToUpload;			
+			
+			
+
+			$('#choose').get()[0].addEventListener('change', handleExcelFile, false);
+		</script>
+		
+		<script>
+			// encrypt and upload data
+			$('#uploadPostButton').on('click', function(event){
+				event.preventDefault();
+				
+				$('#chartLoader').show();
+				$('#dataTableWrapper').hide();
+				$('#upload').show();
+				
+				// send data
+				$.ajax({
+					url : "registerBatch/",
+					type : "POST",
+					data : {
+						elements: JSON.stringify(dataToUpload),
+					},
+			
+					// handle a successful response
+					success : function(json) {
+						var success = json.success;
+						var warnings = json.warnings;
+						var errors = json.errors;
+						
+						for (var i0=0; i0<success.length; i0++) {
+							dataToUpload[success[i0][0]].Status = success[i0][1];
+						}
+						for (var i0=0; i0<warnings.length; i0++) {
+							dataToUpload[warnings[i0][0]].Status = '!Warning: duplicate entry';
+						}
+						for (var i0=0; i0<errors.length; i0++) {
+							dataToUpload[errors[i0][0]].Status = '!Error: ' + errors[i0][1];
+						}
+						
+						createTable(dataToUpload);
+					},
+		
+					// handle a non-successful response
+					error : function(xhr,errmsg,err) {
+						console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+						$('#chartLoader').hide();
+					}
+				});
+			});
+		</script>
+	</body>
+</html>

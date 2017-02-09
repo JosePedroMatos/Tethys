@@ -408,51 +408,6 @@ def trainWrapper(info, data, extra):
         Forecast.objects.filter(name=info['name']).update(ready=False, jobId='')
         raise(ex)
 
-#===============================================================================
-# def trainForecastRun(request, forecastName):
-#     forecast = Forecast.objects.filter(name=forecastName)
-#     if forecast:
-#         forecast.update(ready=False)
-#         
-#         if forecast[0].forecastFile.name != '' and os.path.isfile(forecast[0].forecastFile.path):
-#             os.remove(forecast[0].forecastFile.path)
-#         forecast[0].forecastFile.save(forecastName + '.gpu', ContentFile('dummy content'))
-#         
-#         info = {'leadTime': forecast[0].leadTime,
-#                 'seasons': forecast[0].splitBySeason,
-#                 'nodes': forecast[0].nodes,
-#                 'dataFunction': forecast[0].dataExpression,
-#                 'targetFunction': forecast[0].targetExpression,
-#                 'population': forecast[0].population,
-#                 'epochs': forecast[0].epochs,
-#                 'regularization': float(forecast[0].regularize),
-#                 'filePath': forecast[0].forecastFile.path,
-#                 'name': forecast[0].name,
-#                 'referenceDate': forecast[0].referenceDate.isoformat(),
-#                 'activationFunction': forecast[0].type,
-#                 'valFraction': 1-forecast[0].training/100,
-#                 'timeStepUnit': forecast[0].targetSeries.TIME_STEP_DICT[forecast[0].targetSeries.timeStepUnits],
-#                 'timeStepSize': forecast[0].targetSeries.timeStepPeriod,
-#                 'weigthRange': float(forecast[0].weigthRange),
-#                 'errorFunction': forecast[0].errorFunction,
-#                 'transformWeights': forecast[0].transformWeights,
-#                 'allowNegative': forecast[0].allowNegative,
-#                 'reduceTraining': float(forecast[0].reduceTraining),
-#                 }
-# 
-#         target, extra = fGetForecastData(forecastName)
-#         
-#         #=======================================================================
-#         # trainWrapper(info, target, extra)
-#         # context = {'job': 1}
-#         #=======================================================================
-#          
-#         job = trainWrapper.delay(info, target, extra)
-#         context = {'job': job.id}
-# 
-#         return JsonResponse(context)
-#===============================================================================
-
 def trainForecastProgress(request, forecastName):
     try:
         forecast = Forecast.objects.get(name=forecastName)
@@ -1136,7 +1091,51 @@ def batchSeriesDownloadExample(request):
     response['Content-Disposition'] = 'attachment; filename="AddFromExcelSeriesExample.xlsx"'
     return response
 
+
+
+
 def batchValues(request):
     context = {'LANG': request.LANGUAGE_CODE,
                'LOCAL_JAVASCIPT': settings.LOCAL_JAVASCIPT,}
     return render(request, 'timeSeries/batchValues.html', context)
+
+def batchValuesRegister(request):
+    
+    pass
+
+def batchValuesDownloadExample(request):
+    file = open(os.path.join(os.path.dirname(__file__), 'static', 'timeSeries', 'examples', 'values.xlsx'), 'rb')
+    response = HttpResponse(content=file)
+    response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response['Content-Disposition'] = 'attachment; filename="AddFromExcelValuesExample.xlsx"'
+    return response
+
+def batchValuesInfo(request):
+    currentUser = request.user
+    series = json.loads(request.POST.get('series'))
+    
+    data = []
+    for s0 in series:
+        serie = Series.objects.filter(name=s0['name'])
+        if serie:
+            serie = serie[0]
+            
+            provider = serie.provider
+            location = serie.location
+            seriesType = serie.type   
+            result = Value.objects.filter(series=serie.id).filter(date__gte=s0['dateIni']).filter(date__lte=s0['dateEnd']).order_by('date')
+            
+            values = [{'x':obj.date.isoformat(), 'y':binascii.b2a_base64(obj.record).decode("utf-8")} for obj in result]
+            
+            s0.update({'encryptionKey': serie.encryptionKey, 
+                       'metaEncrypted': serie.metaEncrypted,
+                       'timeStep': dict(Series.TIME_STEP_PERIOD_TYPE)[serie.timeStepUnits],
+                       'timeStepPeriod': serie.timeStepPeriod,
+                       'provider': str(provider),
+                       'type': str(seriesType),
+                       'units': seriesType.units,
+                       'location': str(location),
+                       'data': json.dumps(values),
+                       })
+            
+    return JsonResponse({'info': series})

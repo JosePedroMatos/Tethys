@@ -27,5 +27,10 @@ urlpatterns = [
     url(r'^admin/series/addBatch/$', views.batchSeries, name='batchSeries'),
     url(r'^admin/series/addBatch/registerBatch/$', views.batchSeriesRegister, name='batchSeriesRegister'),
     url(r'^admin/series/example/$', views.batchSeriesDownloadExample, name='batchSeriesDownloadExample'),
+    
+    url(r'^admin/values/addBatch/$', views.batchValues, name='batchValues'),
+    url(r'^admin/values/addBatch/registerBatch/$', views.batchValuesRegister, name='batchValuesRegister'),
+    url(r'^admin/values/example/$', views.batchValuesDownloadExample, name='batchValuesDownloadExample'),
+    url(r'^admin/values/addBatch/info/$', views.batchValuesInfo, name='batchValuesInfo'),
 ]
 
