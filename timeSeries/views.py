@@ -1130,12 +1130,12 @@ def batchValuesInfo(request):
             s0.update({'encryptionKey': serie.encryptionKey, 
                        'metaEncrypted': serie.metaEncrypted,
                        'timeStep': dict(Series.TIME_STEP_PERIOD_TYPE)[serie.timeStepUnits],
-                       'timeStepPeriod': serie.timeStepPeriod,
+                       'timeStepSize': serie.timeStepPeriod,
                        'provider': str(provider),
                        'type': str(seriesType),
                        'units': seriesType.units,
                        'location': str(location),
                        'data': json.dumps(values),
+                       'values': values,
                        })
-            
     return JsonResponse({'info': series})

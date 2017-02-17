@@ -1,11 +1,14 @@
 // Object prototype
 function Value(datetime, value) {
-	this.Date = datetime;
-	this.Value = value;
+	this.x = datetime;
+	this.y = value;
 	this.Status = '';
 }
 
+var palette = new Rickshaw.Color.Palette({ scheme: 'classic9' });
+
 var valuesToUpload = {};
+var storedSeries;
 function handleExcelFile(e) {
 	dataToUpload = [];
 	setTimeout(
@@ -41,7 +44,7 @@ function handleExcelFile(e) {
 										date = Date.parse(worksheet[cellref].v.replace(new RegExp('-', 'g'), '/') + ' GMT');
 									}
 								} else if (cellref.toString().indexOf('B') === 0) {
-									sheetData.push(new Value(date,  parseFloat(worksheet[cellref].v)));
+									sheetData.push(new Value(date/1000,  parseFloat(worksheet[cellref].v)));
 									date = null;
 								}
 							}
@@ -50,13 +53,19 @@ function handleExcelFile(e) {
 					}
 				};
 				reader.onloadend = function() {
-					// get series data using AJAX
 					var seriesNames = Object.keys(valuesToUpload);
+					// prepare plot colors
+					var colors = [];
+					for (var i0=0; i0<seriesNames.length; i0++) {
+						colors.push(palette.color());
+					}
+					
+					// get series data using AJAX
 					var dataToSend = [];
 					for (var i0=0; i0<seriesNames.length; i0++) {
 						dataToSend.push({'name': seriesNames[i0],
-							'dateIni': date2Str(valuesToUpload[seriesNames[i0]][0].Date/1000),
-							'dateEnd': date2Str(valuesToUpload[seriesNames[i0]][valuesToUpload[seriesNames[i0]].length-1].Date/1000)});
+							'dateIni': date2Str(valuesToUpload[seriesNames[i0]][0].x),
+							'dateEnd': date2Str(valuesToUpload[seriesNames[i0]][valuesToUpload[seriesNames[i0]].length-1].x)});
 					}
 					$.ajax({
 						url : "info/",
@@ -68,8 +77,41 @@ function handleExcelFile(e) {
 						// handle a successful response
 						success : function(json) {
 							console.log(json);
-							//display(sheetData, timeStep, timeStepSize, order=order);
-							display(sheetData, 'd', 1, order=order);
+							storedSeries = json.info;
+							
+							$('#seriesCheck').html('');
+							for (var i0=0; i0<storedSeries.length; i0++) {
+								// Display existing data.
+								if ('values' in storedSeries[i0] && storedSeries[i0].values.length>0) {
+									var decryptedData = decryptData(storedSeries[i0].values, key=hashPassword(storedSeries[i0].encryptionKey));
+									display(decryptedData, timeStep=storedSeries[i0].timeStep, timeStepSize=storedSeries[i0].timeStepSize,
+											order=i0, name=storedSeries[i0].name + ' (existing)', strokeColor=colors[i0], fillColor=null, fillAlpha=0.2);
+								}
+								// Display new data
+								if ('timeStep' in storedSeries[i0] && 'timeStepSize' in storedSeries[i0]) {
+									display(valuesToUpload[seriesNames[i0]], timeStep=storedSeries[i0].timeStep, timeStepSize=storedSeries[i0].timeStepSize,
+											order=i0+seriesNames.length, name=storedSeries[i0].name + ' (new)', strokeColor=colors[i0], fillColor=null, fillAlpha=0.8);
+								}
+								
+								// Add legend;
+								addLegend();
+								
+								// Display checkboxes and warnings
+								var container = $('#seriesCheck');
+								if (!('timeStep' in storedSeries[i0]) || !('timeStepSize' in storedSeries[i0])) {
+									var tmpDiv = $('<div>').appendTo(container);
+									$('<input />', { type: 'checkbox', id: 'cb'+ i0, value: storedSeries[i0].name, disabled:true}).appendTo(tmpDiv);
+									$('<label />', { 'for': 'cb' + i0, text: '(Values will not be uploaded, the corresponding series was not found in the database).' }).appendTo(tmpDiv);
+								} else if ('values' in storedSeries[i0] && storedSeries[i0].values.length>0) {
+									var tmpDiv = $('<div>').appendTo(container);
+									$('<input />', { type: 'checkbox', id: 'cb'+ i0, value: storedSeries[i0].name, disabled:false }).appendTo(tmpDiv);
+									$('<label />', { 'for': 'cb' + i0, text: '(' + valuesToUpload[seriesNames[i0]].length + ' values to upload, ' + storedSeries[i0].values.length + ' existing values will be replaced).' }).appendTo(tmpDiv);
+								} else {
+									var tmpDiv = $('<div>').appendTo(container);
+									$('<input />', { type: 'checkbox', id: 'cb'+ i0, value: storedSeries[i0].name, disabled:false, checked:"checked" }).appendTo(tmpDiv);
+									$('<label />', { 'for': 'cb' + i0, text: '(' + valuesToUpload[seriesNames[i0]].length + ' values to upload, no problems detected).' }).appendTo(tmpDiv);
+								}
+							}
 						},
 			
 						// handle a non-successful response

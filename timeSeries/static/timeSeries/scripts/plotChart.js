@@ -122,7 +122,7 @@ function startChart(strokeColor, fillColor) {
 	return graph;
 }
 
-function display(dataForDisplay, timeStep, timeStepSize, order=null, name='unknown', strokeColor=null, fillColor=null, marker={type: 'data'}) {
+function display(dataForDisplay, timeStep, timeStepSize, order=null, name='unknown', strokeColor=null, fillColor=null, fillAlpha=0.8, marker={type: 'data'}) {
 	if (dataForDisplay.length==0) {
 		return false;
 	}
@@ -130,7 +130,7 @@ function display(dataForDisplay, timeStep, timeStepSize, order=null, name='unkno
 		strokeColor = palette.color();
 	}
 	if (fillColor===null) {
-		fillColor = convertHex(strokeColor, 0.8);
+		fillColor = convertHex(strokeColor, fillAlpha);
 	}
 	
 	if (graph===null) {

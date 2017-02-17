@@ -11,9 +11,9 @@
 		{{ LOCAL_JAVASCIPT|safe }}
         
         <script src="{% static 'timeSeries/scripts/ajax.js' %}"></script>
+        <script src="{% static 'timeSeries/scripts/forge.min.js' %}"></script>
         <script src="{% static 'timeSeries/scripts/xlsx.core.min.js' %}"></script>
         <!-- <script src="{% static 'timeSeries/scripts/datatables.min.js' %}"></script> -->
-        <script src="{% static 'timeSeries/scripts/batchValues.js' %}"></script>
         
         <script src="{% static 'timeSeries/scripts/d3.min.js' %}"></script>
         <script src="{% static 'timeSeries/scripts/d3.layout.min.js' %}"></script>
@@ -22,6 +22,8 @@
         <script src="{% static 'timeSeries/scripts/plotChart.js' %}"></script>
         <script src="{% static 'timeSeries/scripts/encryptData.js' %}"></script>
         <script src="{% static 'timeSeries/scripts/decryptData.js' %}"></script>
+        
+        <script src="{% static 'timeSeries/scripts/batchValues.js' %}"></script>
         
         <link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
 		<link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}" />
@@ -83,15 +85,20 @@
 					<!-- <div id="excelLoader" class="loader"></div>
 					<div id="dataTableWrapper"></div> -->
 					
+					<div id="seriesCheck"></div>
+					
 					<div id="chartLoader" class="loader"></div>
-					<div id="chart"></div> 
-					<div id="slider"></div>
+					<div id='chartContainer'>
+						<div id="chart"></div>
+						<div id="slider"></div>
+						<div id="legend"></div>
+					</div>
 				</fieldset>
 				
 				<div class="submit-row">
 					<form onsubmit="return submit();" method="post" id='upload'>
 			    		{% csrf_token %}
-			    		<input value="Save new locations" class="default" name="_save" type="submit" id="uploadPostButton">
+			    		<input value="Save values" class="default" name="_save" type="submit" id="uploadPostButton">
 					</form>
 					<p class="deletelink-box" id="upload"><a id="download" href="/timeSeries/admin/values/example/" class="deletelink">Download example</a></p>
 				    </div>
