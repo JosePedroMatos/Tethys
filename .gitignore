@@ -87,5 +87,18 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+
 /dump.rdb
+/tethys/settings.py
 /celerybeat.pid
+/timeSeries/static/timeSeries/seriesIcons/*
+/timeSeries/static/timeSeries/colormaps/*
+/timeSeries/static/timeSeries/providerIcons/*
+/main/migrations/*
+/map/migrations/*
+/timeSeries/migrations/*
+/main/migrations/__pycache__/*
+/map/migrations/__pycache__/*
+/timeSeries/migrations/__pycache__/*
+*.pyc
