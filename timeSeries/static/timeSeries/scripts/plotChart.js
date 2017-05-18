@@ -29,6 +29,16 @@ var legend;
 var shelving;
 var palette
 
+function clearChart() {
+	$('#chart').html('');
+	$('#slider').html('');
+	$('#legend').html('');
+	graph = null;
+	graphData = [];
+	
+	palette = new Rickshaw.Color.Palette({ scheme: 'classic9' });
+}
+
 function Point(x, y) {
 	this.x = x/1000;
 	this.y = y;

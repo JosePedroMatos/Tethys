@@ -13,7 +13,7 @@
         <script src="{% static 'timeSeries/scripts/ajax.js' %}"></script>
         <script src="{% static 'timeSeries/scripts/forge.min.js' %}"></script>
         <script src="{% static 'timeSeries/scripts/xlsx.core.min.js' %}"></script>
-        <!-- <script src="{% static 'timeSeries/scripts/datatables.min.js' %}"></script> -->
+        <script src="{% static 'timeSeries/scripts/datatables.min.js' %}"></script>
         
         <script src="{% static 'timeSeries/scripts/d3.min.js' %}"></script>
         <script src="{% static 'timeSeries/scripts/d3.layout.min.js' %}"></script>
@@ -28,7 +28,7 @@
         <link rel="stylesheet" type="text/css" href="{% static 'main/css/jquery-ui.css' %}" />
 		<link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}" />
     	<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}" />
-		<!-- <link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/datatables.min.css' %}"/> -->
+		<link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/datatables.min.css' %}"/>
 		<link rel="stylesheet" type="text/css" href="{% static 'timeSeries/css/rickshaw.min.css' %}" />
 		
 	<style>
@@ -110,13 +110,11 @@
 			$(document).ready(function() {
 				$('#download').parent().css("float","right")
 				
-				//$('#validate').hide();
-				//$('#upload').hide();				
+				$('#validate').hide();
+				$('#upload').hide();				
 			})
 			
 			var dataToUpload;			
-			
-			
 
 			$('#choose').get()[0].addEventListener('change', handleExcelFile, false);
 		</script>
@@ -127,8 +125,9 @@
 				event.preventDefault();
 				
 				$('#chartLoader').show();
-				$('#dataTableWrapper').hide();
-				$('#upload').show();
+				$('#seriesCheck').hide();
+				$('#chartContainer').hide();
+				$('#upload').hide();
 				
 				// send data
 				$.ajax({
@@ -155,6 +154,7 @@
 						}
 						
 						createTable(dataToUpload);
+						$('#chartLoader').hide();
 					},
 		
 					// handle a non-successful response
