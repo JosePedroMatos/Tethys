@@ -284,6 +284,11 @@ function closerTimedate(d0, a0) {
 	return closest;
 }
 
+function scaleChanged() {
+	rasterInfo.untouched = false;
+	updateRaster($('#dateSlider').slider('value'));
+}
+
 function updateRaster(date, colormap) {
 	try {
 		var idx = $.inArray(date, rasterDates);
@@ -377,7 +382,7 @@ function timeStepDelta(t0, timeStep, timeStepSize) {
 function requestRasterData(name) {
 	console.log(name);
 	// retrieves raster data from the server
-	var rangeIni = 31*86400*1000;
+	var rangeIni = 10*86400*1000;
 	var rangeEnd = 5*86400*1000;
 	var tmpDateIni = new Date($("#dateSlider").slider("value")).getTime()-rangeIni;
 	var tmpDateEnd = new Date($("#dateSlider").slider("value")).getTime()+rangeEnd;
@@ -408,19 +413,21 @@ function requestRasterData(name) {
 	        		rasterDateController[idx] = data.data[i0];
 	        		
 	        		var tmp = Math.min.apply(Math, data.data[i0].values);
-	        		if (rasterInfo.min == null || tmp<rasterInfo.min) {
+	        		if (rasterInfo.untouched && rasterInfo.min == null || tmp<rasterInfo.min) {
 	        			rasterInfo.min = tmp;
 	        		}
 	        		var tmp = Math.max.apply(Math, data.data[i0].values);
-	        		if (rasterInfo.max == null || tmp>rasterInfo.max) {
+	        		if (rasterInfo.untouched && rasterInfo.max == null || tmp>rasterInfo.max) {
 	        			rasterInfo.max = tmp;
 	        		}
 	        	}
 	        	
 	        	// update min max
-	        	$('#rasterMin')[0].value = Math.floor(rasterInfo.min*100)/100;
-	            $('#rasterMax')[0].value = Math.ceil(rasterInfo.max*100)/100;
-	            
+	        	if (rasterInfo.untouched) {
+	        		$('#rasterMin')[0].value = Math.floor(rasterInfo.min*100)/100;
+	        		$('#rasterMax')[0].value = Math.ceil(rasterInfo.max*100)/100;
+	        	}
+	        	
 	            setTimeout(function() {
 	            	dateProduct = '__';
 	            	updateRaster($('#dateSlider').slider('value'));
@@ -489,7 +496,7 @@ function getDatetimesToDownload(name, dateIni, dateEnd, all) {
 
 function prepareRasterDisplay(name) {
 	// retrieves raster data from the server
-	var rangeIni = 31*86400*1000;
+	var rangeIni = 10*86400*1000;
 	var rangeEnd = 5*86400*1000;
 	var tmpDateIni = new Date($("#dateSlider").slider("value")).getTime()-rangeIni;
 	var tmpDateEnd = new Date($("#dateSlider").slider("value")).getTime()+rangeEnd;
@@ -553,8 +560,10 @@ function prepareRasterDisplay(name) {
 	        			rasterInfo.max = tmp;
 	        		}
 	        	}
-	        	$('#rasterMin')[0].value = Math.floor(rasterInfo.min*100)/100;
-	            $('#rasterMax')[0].value = Math.ceil(rasterInfo.max*100)/100;
+	        	
+		        $('#rasterMin')[0].value = Math.floor(rasterInfo.min*100)/100;
+		        $('#rasterMax')[0].value = Math.ceil(rasterInfo.max*100)/100;
+	        	
 	            $('#rasterUnits')[0].value = rasterDict[rasterInfo.name].units;
 	            
 	            setTimeout(function() {
@@ -846,6 +855,7 @@ $(document).ready(function () {
 				rasterInfo.name = key;
 				rasterInfo.min = 999999;
 				rasterInfo.max = -999999;
+				rasterInfo.untouched = true;
 				
 				// deselect all others
 				rasterCheckboxes.each(function () {

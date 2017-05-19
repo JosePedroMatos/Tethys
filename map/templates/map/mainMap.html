@@ -131,6 +131,10 @@
         $("#datePrevious").outerWidth()-$("#dateNext").outerWidth()-parseFloat($('#datePrevious').css('marginLeft'))-parseFloat($('#datePrevious').css('marginRight'))-parseFloat($('#dateNext').css('marginLeft'))-parseFloat($('#dateNext').css('marginRight'));
         $('#dateText').outerWidth($('#dateText').parent('').innerWidth() + Math.floor(tmpTaken) - 8);
         
+        //rasterScale
+        $('#rasterMax').on('input', scaleChanged);
+        $('#rasterMin').on('input', scaleChanged);
+        
         //hide divs
         $('#loading').hide();
         $('#rasterPannel').hide();
