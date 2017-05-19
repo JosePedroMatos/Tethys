@@ -106,6 +106,8 @@
 		</div>
 		
 		<script>
+			var operations = {{ operations | safe }};
+		
 			// prepare page
 			$(document).ready(function() {
 				$('#download').parent().css("float","right")
@@ -121,49 +123,7 @@
 		
 		<script>
 			// encrypt and upload data
-			$('#uploadPostButton').on('click', function(event){
-				event.preventDefault();
-				
-				$('#chartLoader').show();
-				$('#seriesCheck').hide();
-				$('#chartContainer').hide();
-				$('#upload').hide();
-				
-				// send data
-				$.ajax({
-					url : "registerBatch/",
-					type : "POST",
-					data : {
-						elements: JSON.stringify(dataToUpload),
-					},
-			
-					// handle a successful response
-					success : function(json) {
-						var success = json.success;
-						var warnings = json.warnings;
-						var errors = json.errors;
-						
-						for (var i0=0; i0<success.length; i0++) {
-							dataToUpload[success[i0][0]].Status = success[i0][1];
-						}
-						for (var i0=0; i0<warnings.length; i0++) {
-							dataToUpload[warnings[i0][0]].Status = '!Warning: duplicate entry';
-						}
-						for (var i0=0; i0<errors.length; i0++) {
-							dataToUpload[errors[i0][0]].Status = '!Error: ' + errors[i0][1];
-						}
-						
-						createTable(dataToUpload);
-						$('#chartLoader').hide();
-					},
-		
-					// handle a non-successful response
-					error : function(xhr,errmsg,err) {
-						console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
-						$('#chartLoader').hide();
-					}
-				});
-			});
+			$('#uploadPostButton').on('click', upload);
 		</script>
 	</body>
 </html>

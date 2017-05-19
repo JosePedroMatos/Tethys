@@ -166,6 +166,12 @@ class Value(models.Model):
     iv = models.CharField(max_length=16, null=True, blank=False)
     recordOpen = models.DecimalField(null=True, blank=False, decimal_places=5, max_digits=15)
     
+    def dateInList(self, dateList):
+        if self.date in dateList:
+            return True
+        else:
+            return False
+    
 class Forecast(models.Model):
     # table for storing forecasting objects and associate variables
     LINEAR = 'lin'

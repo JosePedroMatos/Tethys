@@ -29,7 +29,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mpld3
 from gpu.functions import plotQQ, ClickInfo
-
+from timeSeries.uploadValues import uploadValues
 
 def viewSeries(request, seriesList):
     context = {'LANG': request.LANGUAGE_CODE,
@@ -178,7 +178,6 @@ def upload(request, seriesName):
 
 def uploadTimeSeries(request, seriesName):
     # TODO: check provider pass
-    
     # TODO: check duplicated values
     
     data = json.loads(request.POST.get('toUpload'))
@@ -1096,12 +1095,43 @@ def batchSeriesDownloadExample(request):
 
 def batchValues(request):
     context = {'LANG': request.LANGUAGE_CODE,
-               'LOCAL_JAVASCIPT': settings.LOCAL_JAVASCIPT,}
+               'LOCAL_JAVASCIPT': settings.LOCAL_JAVASCIPT,
+               'operations': {'simple':[[0, 'Do not upload'],[1, 'Upload']],
+                              'warning':[[0, 'Do not upload'],[2, 'Upload (keep existing)'],[3, 'Upload (overwrite existing)'],[4, 'Upload (delete existing)']],
+                              'error':[[0, 'Do not upload']]},
+               }
     return render(request, 'timeSeries/batchValues.html', context)
 
 def batchValuesRegister(request):
+    errors = []
+    warnings = []
+    success = []
     
-    pass
+    data = json.loads(request.POST.get('values'))
+    
+    for k0, s0 in data.items():
+        try:
+            if int(s0['action'])!=0:
+                status = uploadValues(k0, s0['values'], int(s0['action']))
+            else:
+                status = 0
+            
+            if status==0 and int(s0['action'])!=0:
+                warnings.append((k0, '!Warning: no values updated.'))
+            else:
+                success.append((k0, 'Success: %d values updated.' % (status,)))
+            
+        except Exception as ex:
+            errors.append((k0, str(ex)))
+    
+    context = {'warnings': warnings,
+               'errors': errors,
+               'success': success,
+               }
+    return HttpResponse(
+                        json.dumps(context),
+                        content_type="application/json"
+                        )
 
 def batchValuesDownloadExample(request):
     file = open(os.path.join(os.path.dirname(__file__), 'static', 'timeSeries', 'examples', 'values.xlsx'), 'rb')
